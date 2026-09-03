@@ -12,8 +12,8 @@ L.Icon.Default.mergeOptions({
 
 // ---------- CONFIG ----------
 // Cambia esto por la URL real del backend de Piñata cuando esté lista
-const BACKEND_URL = 'http://localhost:8000/api/ruta'
-const USE_MOCK = true // pon en false cuando el backend esté listo
+const BACKEND_URL = '/api/ruta'
+const USE_MOCK = false // pon en false cuando el backend esté listo
 
 const BARRANQUILLA_CENTER = [10.9878, -74.7889]
 

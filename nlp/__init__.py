@@ -1,3 +1,3 @@
-from nlp.extract import extract
+from nlp.extractor import extract
 
 __all__ = ["extract"]
