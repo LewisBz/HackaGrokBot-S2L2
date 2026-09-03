@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
-// Fix iconos Leaflet en Vite
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -10,16 +9,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-// ---------- CONFIG ----------
-const BACKEND_URL = 'http://localhost:8000/api/ruta'
-const USE_MOCK = true // false cuando el backend de Peñata esté listo
+const BACKEND_URL = import.meta.env.VITE_API_URL || '/api/ruta'
+const USE_MOCK = String(import.meta.env.VITE_USE_MOCK || 'false').toLowerCase() === 'true'
 
 const BARRANQUILLA_CENTER = [10.9878, -74.7889]
 
 const EXAMPLE_PROMPTS = [
-  '¿Cómo llego de la Universidad del Norte al Centro?',
-  'Ruta de Soledad al Prado',
-  'De la Universidad Libre al aeropuerto',
+  'quiero ir del Centro a Soledad',
+  'de Uninorte al Prado',
+  'de la Plaza de la Paz al Aeropuerto, sin pasar por el Mercado',
 ]
 
 function getSpeechRecognition() {
@@ -27,13 +25,12 @@ function getSpeechRecognition() {
   return window.SpeechRecognition || window.webkitSpeechRecognition || null
 }
 
-// ---------- MOCK ----------
 function mockResponse(_texto) {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        origen: { nombre: 'Universidad del Norte', lat: 11.0198, lng: -74.8508 },
-        destino: { nombre: 'Centro de Barranquilla', lat: 10.9639, lng: -74.7964 },
+        origen: { nombre: 'Uninorte', lat: 11.0198, lng: -74.8508 },
+        destino: { nombre: 'Centro', lat: 10.9639, lng: -74.7964 },
         ruta: [
           [11.0198, -74.8508],
           [11.005, -74.83],
@@ -44,6 +41,8 @@ function mockResponse(_texto) {
         ajuste_reportes: 7,
         eta_final: 35,
         alerta: '⚠️ Reporte reciente: congestión fuerte en la Vía 40, altura del estadio.',
+        extract: { origen: 'Uninorte', destino: 'Centro', restriccion: null },
+        _mock: true,
       })
     }, 900)
   })
@@ -55,8 +54,25 @@ async function callBackend(texto) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mensaje: texto }),
   })
-  if (!res.ok) throw new Error('Error del backend: ' + res.status)
-  return res.json()
+
+  let body = null
+  try {
+    body = await res.json()
+  } catch {
+    body = null
+  }
+
+  if (!res.ok) {
+    const detail =
+      (body && (body.detail || body.error)) ||
+      `Error del backend: ${res.status}`
+    const err = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
+    err.status = res.status
+    err.body = body
+    throw err
+  }
+
+  return body
 }
 
 function FitBounds({ bounds }) {
@@ -71,7 +87,9 @@ export default function App() {
   const [messages, setMessages] = useState([
     {
       from: 'bot',
-      text: 'Hola. Pregúntame una ruta en Barranquilla por texto o con el micrófono. Ej: "¿Cómo llego de la Universidad del Norte al Centro?"',
+      text: USE_MOCK
+        ? 'Modo mock ON. Pide una ruta (texto o mic). Lugares NLP: Centro, Soledad, Uninorte, Prado, Aeropuerto…'
+        : 'Conectado a /api/ruta (NLP → geocode/OSRM → reportes). Ej: "quiero ir del Centro a Soledad"',
     },
   ])
   const [input, setInput] = useState('')
@@ -99,30 +117,55 @@ export default function App() {
     }
   }, [])
 
-  const sendTexto = useCallback(async (texto) => {
-    const trimmed = texto.trim()
-    if (!trimmed || loading) return
+  const sendTexto = useCallback(
+    async (texto) => {
+      const trimmed = texto.trim()
+      if (!trimmed || loading) return
 
-    setMessages((prev) => [...prev, { from: 'user', text: trimmed }])
-    setInput('')
-    setLoading(true)
-    setMicError(null)
+      setMessages((prev) => [...prev, { from: 'user', text: trimmed }])
+      setInput('')
+      setLoading(true)
+      setMicError(null)
 
-    try {
-      const data = USE_MOCK ? await mockResponse(trimmed) : await callBackend(trimmed)
-      setMessages((prev) => [
-        ...prev,
-        { from: 'bot', text: `Ruta encontrada: ${data.origen.nombre} → ${data.destino.nombre}` },
-        ...(data.alerta ? [{ from: 'alert', text: data.alerta }] : []),
-      ])
-      setRouteData(data)
-    } catch (err) {
-      setMessages((prev) => [...prev, { from: 'bot', text: 'Ups, algo falló: ' + err.message }])
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }, [loading])
+      try {
+        const data = USE_MOCK ? await mockResponse(trimmed) : await callBackend(trimmed)
+        const extract = data.extract || {}
+        const nlpLine =
+          extract.origen || extract.destino
+            ? `NLP: ${extract.origen || '?'} → ${extract.destino || '?'}` +
+              (extract.restriccion ? ` (evitar: ${extract.restriccion})` : '')
+            : null
+
+        setMessages((prev) => [
+          ...prev,
+          ...(nlpLine ? [{ from: 'bot', text: nlpLine }] : []),
+          {
+            from: 'bot',
+            text:
+              `Ruta: ${data.origen.nombre} → ${data.destino.nombre}` +
+              (data._mock ? ' (mock)' : ''),
+          },
+          ...(data.alerta ? [{ from: 'alert', text: data.alerta }] : []),
+        ])
+        setRouteData(data)
+      } catch (err) {
+        const hint =
+          err.status === 422
+            ? ' Indica origen y destino claros (ej. Centro, Soledad, Uninorte).'
+            : !USE_MOCK
+              ? ' ¿Backend arriba? `uvicorn app.main:app --reload --port 8000`'
+              : ''
+        setMessages((prev) => [
+          ...prev,
+          { from: 'bot', text: 'No pude armar la ruta: ' + err.message + hint },
+        ])
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [loading],
+  )
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -165,15 +208,6 @@ export default function App() {
         transcript += event.results[i][0].transcript
       }
       setInput(transcript.trim())
-
-      const last = event.results[event.results.length - 1]
-      if (last?.isFinal) {
-        const finalText = transcript.trim()
-        if (finalText) {
-          // Deja el texto en el input; el usuario confirma con Enviar (más seguro en demo)
-          setInput(finalText)
-        }
-      }
     }
 
     recognition.onerror = (event) => {
@@ -198,21 +232,32 @@ export default function App() {
   }
 
   const bounds = routeData ? routeData.ruta.map((p) => [p[0], p[1]]) : null
+  const extract = routeData?.extract
 
   return (
     <div className="app">
       <aside className="panel">
         <header className="app-header">
           <div className="app-title">🚌 Ruta Bus Barranquilla</div>
-          <p className="app-sub">Demo hackathon · chat → ruta en mapa · ETA con reportes</p>
+          <p className="app-sub">
+            chat → NLP → /api/ruta → mapa · {USE_MOCK ? 'MOCK' : 'API live'}
+          </p>
         </header>
 
         <div className="context-strip">
           <strong>Contexto</strong>
-          <span>Rutas de bus en Barranquilla. Escribe o dicta origen y destino.</span>
+          <span>
+            Flujo: mensaje → extract (origen/destino/restricción) → geocode/OSRM → reportes ETA.
+          </span>
           <div className="chips-examples">
             {EXAMPLE_PROMPTS.map((ex) => (
-              <button key={ex} type="button" className="chip" onClick={() => useExample(ex)} disabled={loading}>
+              <button
+                key={ex}
+                type="button"
+                className="chip"
+                onClick={() => useExample(ex)}
+                disabled={loading}
+              >
                 {ex}
               </button>
             ))}
@@ -223,6 +268,9 @@ export default function App() {
           <div className="route-chips">
             <span className="chip-route origen">Origen: {routeData.origen.nombre}</span>
             <span className="chip-route destino">Destino: {routeData.destino.nombre}</span>
+            {extract?.restriccion && (
+              <span className="chip-route nlp">Evitar: {extract.restriccion}</span>
+            )}
           </div>
         )}
 
@@ -232,7 +280,11 @@ export default function App() {
               {m.text}
             </div>
           ))}
-          {loading && <div className="msg bot loading">Buscando ruta…</div>}
+          {loading && (
+            <div className="msg bot loading">
+              {USE_MOCK ? 'Mockeando ruta…' : 'NLP + ruta + reportes…'}
+            </div>
+          )}
         </div>
 
         {routeData && (
@@ -240,12 +292,19 @@ export default function App() {
             <div>ETA estimado (ajustado por reportes)</div>
             <b>{routeData.eta_final} min</b>
             <span>
-              Base: {routeData.eta_base} min · Ajuste: +{routeData.ajuste_reportes} min por reportes
+              Base: {routeData.eta_base} min · Ajuste: +{routeData.ajuste_reportes} min
             </span>
+            {extract && (
+              <span className="eta-nlp">Extract NLP: {JSON.stringify(extract)}</span>
+            )}
           </div>
         )}
 
-        {micError && <div className="mic-error" role="alert">{micError}</div>}
+        {micError && (
+          <div className="mic-error" role="alert">
+            {micError}
+          </div>
+        )}
         {listening && <div className="mic-listening">Escuchando… habla tu ruta</div>}
 
         <form className="chat-form" onSubmit={handleSubmit}>
@@ -269,7 +328,7 @@ export default function App() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Origen y destino…"
+            placeholder="Ej: del Centro a Soledad…"
             autoComplete="off"
             disabled={loading}
             aria-label="Mensaje de ruta"
@@ -282,7 +341,9 @@ export default function App() {
 
       <div className="map-container">
         {!routeData && (
-          <div className="map-hint">Mapa centrado en Barranquilla. Pide una ruta para ver el trayecto.</div>
+          <div className="map-hint">
+            Mapa Barranquilla. El backend resuelve NLP + OSRM al pedir una ruta.
+          </div>
         )}
         <MapContainer center={BARRANQUILLA_CENTER} zoom={12} style={{ height: '100%', width: '100%' }}>
           <TileLayer

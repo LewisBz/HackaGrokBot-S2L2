@@ -297,3 +297,16 @@ form.chat-form button:disabled {
     height: 45vh;
   }
 }
+
+.chip-route.nlp {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.eta-nlp {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #6b7280;
+  word-break: break-all;
+}
