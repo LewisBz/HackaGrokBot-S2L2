@@ -33,5 +33,21 @@ class TestExtract(unittest.TestCase):
         )
 
 
+    def test_universidad_centro_via_51(self) -> None:
+        self.assertEqual(
+            extract(
+                "Estoy saliendo de la universidad y necesito llegar al centro, "
+                "el bus que pasa por la 51 me sirve?"
+            ),
+            {"origen": "Uninorte", "destino": "Centro", "restriccion": "la 51"},
+        )
+
+    def test_aeropuerto_playa(self) -> None:
+        self.assertEqual(
+            extract("¿Cómo llego del aeropuerto a la playa?"),
+            {"origen": "Aeropuerto", "destino": "Playa", "restriccion": None},
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
