@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from nlp.extractor import extract
 from reportes import ajustar
 from rutas import fetch_route, geocode
+from transporte import match_buses
 
 app = FastAPI(title="Rutas Barranquilla")
 
@@ -64,6 +65,13 @@ def post_ruta(body: RutaBody):
 
     route = fetch_route(origen, destino)
     adj = ajustar(origen_name, destino_name, restriccion, route["eta_base"])
+    transporte = match_buses(
+        origen_name,
+        destino_name,
+        origen_coords=origen,
+        destino_coords=destino,
+        limit=5,
+    )
 
     return {
         "origen": origen,
@@ -74,4 +82,5 @@ def post_ruta(body: RutaBody):
         "eta_final": adj["eta_final"],
         "alerta": adj["alerta"],
         "extract": extracted,
+        "transporte": transporte,
     }

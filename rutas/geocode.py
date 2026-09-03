@@ -11,6 +11,7 @@ PLACES: dict[str, dict[str, float]] = {
     "Riomar": {"lat": 11.014, "lng": -74.828},
     "Prado": {"lat": 10.998, "lng": -74.807},
     "Uninorte": {"lat": 11.0198, "lng": -74.8508},
+    "Miramar": {"lat": 11.0085, "lng": -74.8355},
 }
 
 

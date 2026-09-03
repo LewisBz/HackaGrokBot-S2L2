@@ -13,6 +13,7 @@ PLACES: list[tuple[str, list[str]]] = [
     ("Centro", ["el centro", "centro"]),
     ("Prado", ["el prado", "prado"]),
     ("Uninorte", ["uninorte", "universidad del norte"]),
+    ("Miramar", ["miramar"]),
 ]
 
 RESTRICTION_PREFIXES = [
