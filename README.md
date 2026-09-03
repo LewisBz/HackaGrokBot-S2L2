@@ -58,3 +58,7 @@ El dataset de buses esta en `transporte/data/lineas_barranquilla.json` (curado p
 ## Como correr el demo
 
 FastAPI :8000, Frontend :5173, Express :3000 opcional.
+
+## UI + comentarios (rama Backend)
+
+SPA Inicio Buscar Comentarios. SSE /api/comentarios/stream.
