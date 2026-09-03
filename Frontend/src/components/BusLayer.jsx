@@ -61,7 +61,14 @@ function MovingBusMarker({ bus, icon }) {
         <br />
         Línea: {bus.linea}
         <br />
-        {bus.viene_de || '—'} → {bus.hacia || '—'}
+        {(bus.viene_de || bus.origen_linea || '—')} →{' '}
+        {(bus.hacia || bus.destino_linea || '—')}
+        {bus.next_stop ? (
+          <>
+            <br />
+            Próxima: {bus.next_stop}
+          </>
+        ) : null}
         {bus.speed_kmh != null ? (
           <>
             <br />

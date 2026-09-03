@@ -49,9 +49,14 @@ export default function RouteCard({ routeData }) {
         GPS <b>{bus.id}</b>
       </div>
       <div className="route-card-meta">
-        Viene de: {bus.viene_de || '—'}
-        {bus.hacia ? ` → ${bus.hacia}` : ''}
+        Viene de: {bus.viene_de || bus.origen_linea || '—'}
+        {(bus.hacia || bus.destino_linea)
+          ? ` → ${bus.hacia || bus.destino_linea}`
+          : ''}
       </div>
+      {bus.next_stop ? (
+        <div className="route-card-meta">Próxima: {bus.next_stop}</div>
+      ) : null}
       {bus.dist_km != null && (
         <div className="route-card-meta">Distancia: {bus.dist_km} km</div>
       )}
