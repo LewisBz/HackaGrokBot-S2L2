@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
-// Fix para los iconos de Leaflet en Vite (problema conocido)
+// Fix iconos Leaflet en Vite
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -11,14 +11,24 @@ L.Icon.Default.mergeOptions({
 })
 
 // ---------- CONFIG ----------
-// Cambia esto por la URL real del backend de Piñata cuando esté lista
 const BACKEND_URL = 'http://localhost:8000/api/ruta'
-const USE_MOCK = true // pon en false cuando el backend esté listo
+const USE_MOCK = true // false cuando el backend de Peñata esté listo
 
 const BARRANQUILLA_CENTER = [10.9878, -74.7889]
 
-// ---------- MOCK (para probar sin backend) ----------
-function mockResponse(texto) {
+const EXAMPLE_PROMPTS = [
+  '¿Cómo llego de la Universidad del Norte al Centro?',
+  'Ruta de Soledad al Prado',
+  'De la Universidad Libre al aeropuerto',
+]
+
+function getSpeechRecognition() {
+  if (typeof window === 'undefined') return null
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null
+}
+
+// ---------- MOCK ----------
+function mockResponse(_texto) {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
@@ -39,7 +49,6 @@ function mockResponse(texto) {
   })
 }
 
-// ---------- INTEGRACIÓN REAL ----------
 async function callBackend(texto) {
   const res = await fetch(BACKEND_URL, {
     method: 'POST',
@@ -48,11 +57,8 @@ async function callBackend(texto) {
   })
   if (!res.ok) throw new Error('Error del backend: ' + res.status)
   return res.json()
-  // Se espera el mismo formato que mockResponse() de arriba.
-  // Ese es el "contrato" que deben acordar con Piñata (backend).
 }
 
-// Ajusta el zoom del mapa cuando cambia la ruta
 function FitBounds({ bounds }) {
   const map = useMap()
   useEffect(() => {
@@ -63,12 +69,19 @@ function FitBounds({ bounds }) {
 
 export default function App() {
   const [messages, setMessages] = useState([
-    { from: 'bot', text: 'Hola, dime a dónde quieres ir. Ej: "¿Cómo llego de la Universidad del Norte al Centro?"' },
+    {
+      from: 'bot',
+      text: 'Hola. Pregúntame una ruta en Barranquilla por texto o con el micrófono. Ej: "¿Cómo llego de la Universidad del Norte al Centro?"',
+    },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [routeData, setRouteData] = useState(null) // { origen, destino, ruta, eta_base, ajuste_reportes, eta_final }
+  const [routeData, setRouteData] = useState(null)
+  const [listening, setListening] = useState(false)
+  const [micError, setMicError] = useState(null)
   const chatLogRef = useRef(null)
+  const recognitionRef = useRef(null)
+  const speechSupported = Boolean(getSpeechRecognition())
 
   useEffect(() => {
     if (chatLogRef.current) {
@@ -76,18 +89,27 @@ export default function App() {
     }
   }, [messages, loading])
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    const texto = input.trim()
-    if (!texto) return
+  useEffect(() => {
+    return () => {
+      try {
+        recognitionRef.current?.stop()
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [])
 
-    setMessages((prev) => [...prev, { from: 'user', text: texto }])
+  const sendTexto = useCallback(async (texto) => {
+    const trimmed = texto.trim()
+    if (!trimmed || loading) return
+
+    setMessages((prev) => [...prev, { from: 'user', text: trimmed }])
     setInput('')
     setLoading(true)
+    setMicError(null)
 
     try {
-      const data = USE_MOCK ? await mockResponse(texto) : await callBackend(texto)
-
+      const data = USE_MOCK ? await mockResponse(trimmed) : await callBackend(trimmed)
       setMessages((prev) => [
         ...prev,
         { from: 'bot', text: `Ruta encontrada: ${data.origen.nombre} → ${data.destino.nombre}` },
@@ -100,27 +122,122 @@ export default function App() {
     } finally {
       setLoading(false)
     }
+  }, [loading])
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    sendTexto(input)
+  }
+
+  function useExample(text) {
+    setInput(text)
+  }
+
+  function toggleMic() {
+    const SpeechRecognition = getSpeechRecognition()
+    if (!SpeechRecognition) {
+      setMicError('Tu navegador no soporta dictado por voz. Prueba Chrome o Edge.')
+      return
+    }
+
+    if (listening) {
+      try {
+        recognitionRef.current?.stop()
+      } catch {
+        /* ignore */
+      }
+      setListening(false)
+      return
+    }
+
+    setMicError(null)
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'es-CO'
+    recognition.interimResults = true
+    recognition.continuous = false
+    recognitionRef.current = recognition
+
+    recognition.onstart = () => setListening(true)
+
+    recognition.onresult = (event) => {
+      let transcript = ''
+      for (let i = 0; i < event.results.length; i += 1) {
+        transcript += event.results[i][0].transcript
+      }
+      setInput(transcript.trim())
+
+      const last = event.results[event.results.length - 1]
+      if (last?.isFinal) {
+        const finalText = transcript.trim()
+        if (finalText) {
+          // Deja el texto en el input; el usuario confirma con Enviar (más seguro en demo)
+          setInput(finalText)
+        }
+      }
+    }
+
+    recognition.onerror = (event) => {
+      setListening(false)
+      if (event.error === 'not-allowed') {
+        setMicError('Permiso de micrófono denegado. Actívalo en el navegador y reintenta.')
+      } else if (event.error === 'no-speech') {
+        setMicError('No escuché nada. Intenta de nuevo.')
+      } else {
+        setMicError('Error de voz: ' + event.error)
+      }
+    }
+
+    recognition.onend = () => setListening(false)
+
+    try {
+      recognition.start()
+    } catch (err) {
+      setListening(false)
+      setMicError('No pude iniciar el micrófono: ' + err.message)
+    }
   }
 
   const bounds = routeData ? routeData.ruta.map((p) => [p[0], p[1]]) : null
 
   return (
     <div className="app">
-      <div className="panel">
-        <header className="app-header">🚌 Ruta Bus Barranquilla</header>
+      <aside className="panel">
+        <header className="app-header">
+          <div className="app-title">🚌 Ruta Bus Barranquilla</div>
+          <p className="app-sub">Demo hackathon · chat → ruta en mapa · ETA con reportes</p>
+        </header>
 
-        <div className="chat-log" ref={chatLogRef}>
+        <div className="context-strip">
+          <strong>Contexto</strong>
+          <span>Rutas de bus en Barranquilla. Escribe o dicta origen y destino.</span>
+          <div className="chips-examples">
+            {EXAMPLE_PROMPTS.map((ex) => (
+              <button key={ex} type="button" className="chip" onClick={() => useExample(ex)} disabled={loading}>
+                {ex}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {routeData && (
+          <div className="route-chips">
+            <span className="chip-route origen">Origen: {routeData.origen.nombre}</span>
+            <span className="chip-route destino">Destino: {routeData.destino.nombre}</span>
+          </div>
+        )}
+
+        <div className="chat-log" ref={chatLogRef} aria-live="polite">
           {messages.map((m, i) => (
             <div key={i} className={`msg ${m.from}`}>
               {m.text}
             </div>
           ))}
-          {loading && <div className="msg bot loading">Buscando ruta...</div>}
+          {loading && <div className="msg bot loading">Buscando ruta…</div>}
         </div>
 
         {routeData && (
           <div className="eta-box">
-            ETA estimado (ajustado por reportes en tiempo real)
+            <div>ETA estimado (ajustado por reportes)</div>
             <b>{routeData.eta_final} min</b>
             <span>
               Base: {routeData.eta_base} min · Ajuste: +{routeData.ajuste_reportes} min por reportes
@@ -128,24 +245,51 @@ export default function App() {
           </div>
         )}
 
+        {micError && <div className="mic-error" role="alert">{micError}</div>}
+        {listening && <div className="mic-listening">Escuchando… habla tu ruta</div>}
+
         <form className="chat-form" onSubmit={handleSubmit}>
+          <button
+            type="button"
+            className={`mic-btn${listening ? ' active' : ''}`}
+            onClick={toggleMic}
+            disabled={loading || !speechSupported}
+            aria-label={listening ? 'Detener micrófono' : 'Dictar con micrófono'}
+            title={
+              speechSupported
+                ? listening
+                  ? 'Detener'
+                  : 'Dictar (es-CO)'
+                : 'Voz no disponible en este navegador'
+            }
+          >
+            {listening ? '⏹' : '🎤'}
+          </button>
           <input
             type="text"
-            placeholder="Escribe tu ruta..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            placeholder="Origen y destino…"
             autoComplete="off"
+            disabled={loading}
+            aria-label="Mensaje de ruta"
           />
-          <button type="submit">Enviar</button>
+          <button type="submit" disabled={loading || !input.trim()} aria-label="Enviar">
+            Enviar
+          </button>
         </form>
-      </div>
+      </aside>
 
       <div className="map-container">
-        <MapContainer center={BARRANQUILLA_CENTER} zoom={13} style={{ height: '100%', width: '100%' }}>
+        {!routeData && (
+          <div className="map-hint">Mapa centrado en Barranquilla. Pide una ruta para ver el trayecto.</div>
+        )}
+        <MapContainer center={BARRANQUILLA_CENTER} zoom={12} style={{ height: '100%', width: '100%' }}>
           <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          {bounds && <FitBounds bounds={bounds} />}
           {routeData && (
             <>
               <Marker position={[routeData.origen.lat, routeData.origen.lng]}>
@@ -154,8 +298,7 @@ export default function App() {
               <Marker position={[routeData.destino.lat, routeData.destino.lng]}>
                 <Popup>Destino: {routeData.destino.nombre}</Popup>
               </Marker>
-              <Polyline positions={routeData.ruta} pathOptions={{ color: '#2563eb', weight: 5 }} />
-              <FitBounds bounds={bounds} />
+              <Polyline positions={routeData.ruta} color="#2563eb" weight={5} />
             </>
           )}
         </MapContainer>
