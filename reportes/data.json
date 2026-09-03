@@ -1,0 +1,26 @@
+[
+  {
+    "zona": "Mercado",
+    "severidad": 3,
+    "minutos": 8,
+    "alerta": "Congestion alta en Mercado (+8 min)"
+  },
+  {
+    "zona": "Centro",
+    "severidad": 2,
+    "minutos": 5,
+    "alerta": "Trafico moderado en Centro (+5 min)"
+  },
+  {
+    "zona": "Uninorte",
+    "severidad": 1,
+    "minutos": 3,
+    "alerta": "Demora leve cerca de Uninorte (+3 min)"
+  },
+  {
+    "zona": "Aeropuerto",
+    "severidad": 2,
+    "minutos": 6,
+    "alerta": "Trafico moderado en Aeropuerto (+6 min)"
+  }
+]
