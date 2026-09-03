@@ -1,51 +1,66 @@
-# HackaGrokBot-S2L2
+# HackaGrokBot-S2L2 - Rutas Barranquilla
 
-Demo de rutas de bus en Barranquilla. Este PR es la pieza de Lewis (Persona 3): extraer origen, destino y restricción de texto libre.
+Modular monolith: chat -> NLP -> OSRM -> reportes -> mapa.
 
-## NLP (Lewis)
+## Tree
 
-Entrada: texto libre en español.
-Salida, siempre este JSON:
+```
+app/           # FastAPI orchestrator (POST /api/ruta)
+nlp/           # Lewis - extract origen/destino/restriccion
+rutas/         # Penata - geocode + OSRM
+reportes/      # Sebas - ajuste ETA por zona
+Frontend/      # Samuel - Vite UI
+tests/         # pytest
+```
+
+## Contrato POST /api/ruta
+
+Request:
 
 ```json
-{"origen":"Centro","destino":"Soledad","restriccion":null}
+{"mensaje": "quiero ir del Centro a Soledad"}
 ```
 
-Campo que no aparezca → `null`.
+Response (Samuel):
 
-### Usar la función
-
-```python
-from nlp.extractor import extract
-
-extract("quiero ir del centro a soledad")
-# {"origen": "Centro", "destino": "Soledad", "restriccion": None}
+```json
+{
+  "origen": {"nombre": "Centro", "lat": 10.9639, "lng": -74.7964},
+  "destino": {"nombre": "Soledad", "lat": 10.918, "lng": -74.767},
+  "ruta": [[10.96, -74.79], [10.91, -74.76]],
+  "eta_base": 25,
+  "ajuste_reportes": 5,
+  "eta_final": 30,
+  "alerta": "Trafico moderado en Centro (+5 min)",
+  "extract": {"origen": "Centro", "destino": "Soledad", "restriccion": null}
+}
 ```
 
-### Endpoint para Peñata
+422 si faltan origen o destino.
 
-```bash
+
+## Como correr
+
+Backend:
+
+```
 pip install -r requirements.txt
-uvicorn nlp.server:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 
-```http
-POST /extract
-Content-Type: application/json
+Frontend:
 
-{"texto":"de la plaza de la paz al aeropuerto, sin pasar por el mercado"}
+```
+cd Frontend
+npm install
+# set USE_MOCK=false (env / .env)
+npm run dev
 ```
 
-```json
-{"origen":"Plaza de la Paz","destino":"Aeropuerto","restriccion":"Mercado"}
-```
+Health: GET http://127.0.0.1:8000/health -> {"ok": true}
 
-`GET /health` → `{"ok": true}`
+## Workflow
 
-### Tests
-
-```bash
-python -m unittest tests.test_extractor -v
-```
-
-Lugares reconocidos de entrada: Centro, Soledad, Plaza de la Paz, Aeropuerto, Mercado, Boston, Riomar, Prado, Uninorte.
+- main solo recibe cambios via Pull Requests.
+- Ramas: feature/<modulo>-<cambio> (ej. feature/rutas-osrm).
+- No commits de node_modules/ (esta en .gitignore).
