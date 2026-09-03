@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from buses import recommend, snapshot, start_simulator
 from nlp.extractor import extract
 from reportes import ajustar
 from rutas import fetch_route, geocode
@@ -31,9 +32,19 @@ class RutaBody(BaseModel):
     mensaje: str
 
 
+@app.on_event("startup")
+def _start_bus_sim() -> None:
+    start_simulator(interval_s=1.0)
+
+
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+@app.get("/api/buses")
+def get_buses():
+    return snapshot()
 
 
 @app.post("/extract")
@@ -64,6 +75,7 @@ def post_ruta(body: RutaBody):
 
     route = fetch_route(origen, destino)
     adj = ajustar(origen_name, destino_name, restriccion, route["eta_base"])
+    bus_recomendado = recommend(origen, destino)
 
     return {
         "origen": origen,
@@ -74,4 +86,5 @@ def post_ruta(body: RutaBody):
         "eta_final": adj["eta_final"],
         "alerta": adj["alerta"],
         "extract": extracted,
+        "bus_recomendado": bus_recomendado,
     }
