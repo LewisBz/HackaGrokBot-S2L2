@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "ciudad": "Barranquilla / Área Metropolitana",
+    "nota": "Dataset curado para demo de hackathon (no GTFS oficial). Paradas alineadas al NLP local. Algunas líneas de Montalvo están marcadas como demo_inventado=true por escasez de datos públicos.",
+    "empresas": ["Sobusa", "Trasalianco", "La Carolina", "Sodis", "Montalvo"],
+    "actualizado": "2026-09"
+  },
+  "lineas": [
+    {
+      "empresa": "Sobusa",
+      "codigo": "C13",
+      "nombre": "Vía 40 / Calle 76 → Nevada Soledad",
+      "paradas": ["Uninorte", "Riomar", "Prado", "Plaza de la Paz", "Centro", "Mercado", "Soledad"],
+      "color": "#E11D48",
+      "demo_inventado": false,
+      "corredor": "Vía 40 · Calle 30 · Calle 17 · Soledad"
+    },
+    {
+      "empresa": "Sobusa",
+      "codigo": "B18",
+      "nombre": "Puerto Colombia / Vía 40 → Nevada Soledad",
+      "paradas": ["Uninorte", "Boston", "Prado", "Centro", "Mercado", "Soledad"],
+      "color": "#BE123C",
+      "demo_inventado": false,
+      "corredor": "Puerto Colombia · Vía 40 · Centro · Nevada"
+    },
+    {
+      "empresa": "Sobusa",
+      "codigo": "C14",
+      "nombre": "Granabastos · Carrera 54 · Uninorte",
+      "paradas": ["Soledad", "Mercado", "Centro", "Prado", "Boston", "Uninorte"],
+      "color": "#F43F5E",
+      "demo_inventado": false,
+      "corredor": "Granabastos · Cra 54 · La Playa · Uninorte"
+    },
+    {
+      "empresa": "Sobusa",
+      "codigo": "C16",
+      "nombre": "Granabastos · Calle 72 · La Playa",
+      "paradas": ["Soledad", "Centro", "Plaza de la Paz", "Prado", "Boston", "Riomar"],
+      "color": "#FB7185",
+      "demo_inventado": false,
+      "corredor": "Granabastos · Calle 72 · La Playa"
+    },
+    {
+      "empresa": "Trasalianco",
+      "codigo": "B19",
+      "nombre": "Los Almendros · Simón Bolívar · Centro",
+      "paradas": ["Soledad", "Mercado", "Centro", "Plaza de la Paz", "Prado"],
+      "color": "#2563EB",
+      "demo_inventado": false,
+      "corredor": "Los Robles · Almendros · Centro"
+    },
+    {
+      "empresa": "Trasalianco",
+      "codigo": "D18",
+      "nombre": "Malambo · Murillo · Calle 76",
+      "paradas": ["Soledad", "Mercado", "Centro", "Prado", "Boston", "Riomar"],
+      "color": "#1D4ED8",
+      "demo_inventado": false,
+      "corredor": "Malambo · Murillo · Circunvalar · Calle 76"
+    },
+    {
+      "empresa": "Trasalianco",
+      "codigo": "T76",
+      "nombre": "Centro · Prado · Calle 76 Express",
+      "paradas": ["Centro", "Plaza de la Paz", "Prado", "Boston", "Miramar"],
+      "color": "#3B82F6",
+      "demo_inventado": false,
+      "corredor": "Centro · Prado · Calle 76"
+    },
+    {
+      "empresa": "La Carolina",
+      "codigo": "A16",
+      "nombre": "Terminal · Miramar · Alameda del Río",
+      "paradas": ["Soledad", "Centro", "Prado", "Boston", "Miramar", "Riomar"],
+      "color": "#059669",
+      "demo_inventado": false,
+      "corredor": "Terminal · Carrera 38 · Miramar"
+    },
+    {
+      "empresa": "La Carolina",
+      "codigo": "D6",
+      "nombre": "Calle 30 · Buenavista · Corredor Universitario",
+      "paradas": ["Soledad", "Centro", "Plaza de la Paz", "Prado", "Uninorte", "Miramar"],
+      "color": "#10B981",
+      "demo_inventado": false,
+      "corredor": "Calle 30 · Villa Carolina · Buenavista · Uninorte"
+    },
+    {
+      "empresa": "La Carolina",
+      "codigo": "D7",
+      "nombre": "Calle 17 · Buenavista · Corredor Universitario",
+      "paradas": ["Soledad", "Mercado", "Centro", "Boston", "Uninorte", "Riomar"],
+      "color": "#34D399",
+      "demo_inventado": false,
+      "corredor": "Calle 17 · Villa Carolina · Buenavista"
+    },
+    {
+      "empresa": "La Carolina",
+      "codigo": "LC-X",
+      "nombre": "Express Terminal · Centro · Miramar",
+      "paradas": ["Aeropuerto", "Soledad", "Centro", "Prado", "Miramar"],
+      "color": "#047857",
+      "demo_inventado": false,
+      "corredor": "Terminal · Centro · Miramar Express"
+    },
+    {
+      "empresa": "Sodis",
+      "codigo": "B13",
+      "nombre": "Soledad · Plaza de la Paz · Riomar",
+      "paradas": ["Soledad", "Mercado", "Centro", "Plaza de la Paz", "Prado", "Riomar"],
+      "color": "#7C3AED",
+      "demo_inventado": false,
+      "corredor": "Soledad · La Paz · Riomar (circular)"
+    },
+    {
+      "empresa": "Sodis",
+      "codigo": "B14",
+      "nombre": "Soledad · Buenavista Circular",
+      "paradas": ["Soledad", "Centro", "Plaza de la Paz", "Boston", "Miramar", "Riomar"],
+      "color": "#8B5CF6",
+      "demo_inventado": false,
+      "corredor": "Soledad · Malvinas · Buenavista"
+    },
+    {
+      "empresa": "Sodis",
+      "codigo": "B15",
+      "nombre": "Soledad · Calle 17 · Centro · La Paz",
+      "paradas": ["Soledad", "Mercado", "Centro", "Plaza de la Paz", "Boston"],
+      "color": "#A78BFA",
+      "demo_inventado": false,
+      "corredor": "Soledad · Calle 17 · Centro · Sourdis · La Paz"
+    },
+    {
+      "empresa": "Sodis",
+      "codigo": "B17",
+      "nombre": "Aeropuerto · Calle 30 · Riomar",
+      "paradas": ["Aeropuerto", "Soledad", "Centro", "Prado", "Uninorte", "Riomar"],
+      "color": "#6D28D9",
+      "demo_inventado": false,
+      "corredor": "Aeropuerto · Calle 30 · Simón Bolívar · Riomar"
+    },
+    {
+      "empresa": "Montalvo",
+      "codigo": "M01",
+      "nombre": "Norte · Uninorte · Centro (demo)",
+      "paradas": ["Uninorte", "Riomar", "Boston", "Prado", "Plaza de la Paz", "Centro"],
+      "color": "#EA580C",
+      "demo_inventado": true,
+      "corredor": "Corredor norte–centro (dataset demo)"
+    },
+    {
+      "empresa": "Montalvo",
+      "codigo": "M02",
+      "nombre": "Miramar · Prado · Mercado (demo)",
+      "paradas": ["Miramar", "Boston", "Prado", "Centro", "Mercado", "Soledad"],
+      "color": "#F97316",
+      "demo_inventado": true,
+      "corredor": "Miramar · norte · centro · Mercado (dataset demo)"
+    },
+    {
+      "empresa": "Montalvo",
+      "codigo": "M03",
+      "nombre": "Aeropuerto · Centro Express (demo)",
+      "paradas": ["Aeropuerto", "Soledad", "Mercado", "Centro", "Plaza de la Paz"],
+      "color": "#FB923C",
+      "demo_inventado": true,
+      "corredor": "Aeropuerto · Soledad · Centro (dataset demo)"
+    }
+  ]
+}
