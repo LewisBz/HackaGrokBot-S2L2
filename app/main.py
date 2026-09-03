@@ -1,10 +1,14 @@
 """Orquestador FastAPI - modular monolith Rutas Barranquilla."""
 from __future__ import annotations
 
+import threading
+import time
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from buses import recommend, snapshot, tick
 from nlp.extractor import extract
 from reportes import ajustar
 from rutas import fetch_route, geocode
@@ -31,9 +35,29 @@ class RutaBody(BaseModel):
     mensaje: str
 
 
+def _bus_ticker() -> None:
+    while True:
+        try:
+            tick()
+        except Exception:
+            pass
+        time.sleep(1.0)
+
+
+@app.on_event("startup")
+def _start_bus_sim() -> None:
+    t = threading.Thread(target=_bus_ticker, name="bus-ticker", daemon=True)
+    t.start()
+
+
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+@app.get("/api/buses")
+def get_buses():
+    return snapshot()
 
 
 @app.post("/extract")
@@ -64,6 +88,7 @@ def post_ruta(body: RutaBody):
 
     route = fetch_route(origen, destino)
     adj = ajustar(origen_name, destino_name, restriccion, route["eta_base"])
+    bus_recomendado = recommend(origen, destino)
 
     return {
         "origen": origen,
@@ -74,4 +99,5 @@ def post_ruta(body: RutaBody):
         "eta_final": adj["eta_final"],
         "alerta": adj["alerta"],
         "extract": extracted,
+        "bus_recomendado": bus_recomendado,
     }

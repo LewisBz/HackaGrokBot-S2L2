@@ -33,7 +33,13 @@ VIA_PREFIXES = [
 ]
 
 STREET_RE = re.compile(
-    r"^(?:la|el|calle|carrera|cra|cll)\s+\d+\w*$",
+    r"^(?:la|el|calle|carrera|cra|cll|kr|av|avenida)\s+\d+[\w\-#\s]*$",
+    re.IGNORECASE,
+)
+
+# Direcciones libres tipo "Cra 51 #82-10 Barranquilla"
+ADDRESS_CHUNK_RE = re.compile(
+    r"(?:calle|carrera|cra|cll|kr|av|avenida)\s+\d+[\w\-#]*(?:\s+#?[\w\-]+)*(?:\s+barranquilla)?",
     re.IGNORECASE,
 )
 
@@ -131,5 +137,28 @@ def extract(texto: str | None) -> dict[str, str | None]:
             origen = places[0][2]
         else:
             destino = places[0][2]
+
+    # Fallback: "de <texto> a <texto>" para direcciones arbitrarias (Nominatim)
+    if origen is None or destino is None:
+        m = re.search(
+            r"\b(?:de|del|desde)\s+(.+?)\s+(?:a|al|hacia|hasta)\s+(.+)$",
+            norm_od,
+        )
+        if m:
+            left, right = m.group(1).strip(), m.group(2).strip()
+            # Preferir chunk de direccion si existe
+            al = ADDRESS_CHUNK_RE.search(left)
+            ar = ADDRESS_CHUNK_RE.search(right)
+            if origen is None:
+                origen = al.group(0).strip() if al else left
+            if destino is None:
+                destino = ar.group(0).strip() if ar else right
+            # Capitalizar places conocidos si coinciden
+            for canonical, aliases in PLACES:
+                for alias in aliases:
+                    if _norm(alias) == _norm(origen or ""):
+                        origen = canonical
+                    if _norm(alias) == _norm(destino or ""):
+                        destino = canonical
 
     return {"origen": origen, "destino": destino, "restriccion": restriccion}

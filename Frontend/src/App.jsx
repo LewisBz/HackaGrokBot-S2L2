@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -11,11 +11,21 @@ L.Icon.Default.mergeOptions({
 })
 
 // ---------- CONFIG ----------
-// Cambia esto por la URL real del backend de Piñata cuando esté lista
 const BACKEND_URL = '/api/ruta'
+const BUSES_URL = '/api/buses'
 const USE_MOCK = false // pon en false cuando el backend esté listo
 
 const BARRANQUILLA_CENTER = [10.9878, -74.7889]
+
+function busIcon(linea) {
+  const short = (linea || '?').split('-')[0]
+  return L.divIcon({
+    className: 'bus-marker',
+    html: `<div class="bus-dot">${short}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  })
+}
 
 // ---------- MOCK (para probar sin backend) ----------
 function mockResponse(texto) {
@@ -57,8 +67,6 @@ async function callBackend(texto) {
     throw new Error(detail)
   }
   return res.json()
-  // Se espera el mismo formato que mockResponse() de arriba.
-  // Ese es el "contrato" que deben acordar con Piñata (backend).
 }
 
 // Ajusta el zoom del mapa cuando cambia la ruta
@@ -76,8 +84,30 @@ export default function App() {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [routeData, setRouteData] = useState(null) // { origen, destino, ruta, eta_base, ajuste_reportes, eta_final }
+  const [routeData, setRouteData] = useState(null)
+  const [buses, setBuses] = useState([])
   const chatLogRef = useRef(null)
+
+  // Poll GPS de buses cada 1.5s
+  useEffect(() => {
+    let cancelled = false
+    async function pull() {
+      try {
+        const res = await fetch(BUSES_URL)
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled && Array.isArray(data)) setBuses(data)
+      } catch {
+        /* ignore transient errors */
+      }
+    }
+    pull()
+    const id = setInterval(pull, 1500)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
 
   useEffect(() => {
     if (chatLogRef.current) {
@@ -112,6 +142,13 @@ export default function App() {
   }
 
   const bounds = routeData ? routeData.ruta.map((p) => [p[0], p[1]]) : null
+  const busIcons = useMemo(() => {
+    const map = {}
+    for (const b of buses) {
+      if (!map[b.linea]) map[b.linea] = busIcon(b.linea)
+    }
+    return map
+  }, [buses])
 
   return (
     <div className="app">
@@ -137,6 +174,20 @@ export default function App() {
           </div>
         )}
 
+        {routeData?.bus_recomendado && (
+          <div className="bus-card">
+            <div className="bus-card-title">🚌 Bus recomendado</div>
+            <div>
+              <b>{routeData.bus_recomendado.id}</b> · {routeData.bus_recomendado.linea}
+            </div>
+            <div className="bus-card-meta">
+              Viene de: {routeData.bus_recomendado.viene_de}
+              {routeData.bus_recomendado.hacia ? ` → ${routeData.bus_recomendado.hacia}` : ''}
+            </div>
+            <div className="bus-card-eta">ETA bus: ~{routeData.bus_recomendado.eta_min} min</div>
+          </div>
+        )}
+
         <form className="chat-form" onSubmit={handleSubmit}>
           <input
             type="text"
@@ -155,6 +206,21 @@ export default function App() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          {buses.map((b) => (
+            <Marker
+              key={b.id}
+              position={[b.lat, b.lng]}
+              icon={busIcons[b.linea] || busIcon(b.linea)}
+            >
+              <Popup>
+                {b.id} · {b.linea}
+                <br />
+                {b.viene_de} → {b.hacia}
+                <br />
+                {b.speed_kmh} km/h
+              </Popup>
+            </Marker>
+          ))}
           {routeData && (
             <>
               <Marker position={[routeData.origen.lat, routeData.origen.lng]}>

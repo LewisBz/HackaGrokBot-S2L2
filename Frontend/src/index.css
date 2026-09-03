@@ -127,3 +127,48 @@ form.chat-form button {
 form.chat-form button:hover {
   background: #1d4ed8;
 }
+
+.bus-card {
+  margin: 0 12px 8px 12px;
+  padding: 10px 12px;
+  background: #ecfdf5;
+  border: 1px solid #34d399;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #065f46;
+}
+
+.bus-card-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.bus-card-meta {
+  color: #047857;
+  margin-top: 2px;
+}
+
+.bus-card-eta {
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.bus-marker {
+  background: transparent;
+  border: none;
+}
+
+.bus-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 2px solid #92400e;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
