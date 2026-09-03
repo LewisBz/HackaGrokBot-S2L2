@@ -28,13 +28,22 @@ app.post("/api/route", async (req, res) => {
     }
 
     const [originLng, originLat] = originCoords;
-    const [destLngl, destLat] = destCoords;
+    const [destLng, destLat] = destCoords;
 
-    const url = http://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLngl},${destLat}?overview=full&geometries=geojson;
+    const url =
+      "http://router.project-osrm.org/route/v1/driving/" +
+      originLng +
+      "," +
+      originLat +
+      ";" +
+      destLng +
+      "," +
+      destLat +
+      "?overview=full&geometries=geojson";
 
     const { data } = await axios.get(url);
 
-    if (!data?.routes?.length) {
+    if (!data || !data.routes || !data.routes.length) {
       return res.status(502).json({ error: "OSRM returned no routes." });
     }
 
@@ -46,7 +55,7 @@ app.post("/api/route", async (req, res) => {
       duration_seconds: route.duration,
     });
   } catch (err) {
-    const status = err.response?.status || 502;
+    const status = (err.response && err.response.status) || 502;
     res.status(status).json({
       error: "Failed to fetch route from OSRM.",
       details: err.message,
@@ -55,5 +64,5 @@ app.post("/api/route", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log("Server listening on port " + PORT);
 });
