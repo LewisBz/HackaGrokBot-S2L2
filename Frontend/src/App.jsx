@@ -75,7 +75,16 @@ async function callBackend(texto) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mensaje: texto }),
   })
-  if (!res.ok) throw new Error('Error del backend: ' + res.status)
+  if (!res.ok) {
+    let detail = 'Error del backend: ' + res.status
+    try {
+      const body = await res.json()
+      if (typeof body.detail === 'string') detail = body.detail
+    } catch {
+      /* keep status text */
+    }
+    throw new Error(detail)
+  }
   return res.json()
 }
 

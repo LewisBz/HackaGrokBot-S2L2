@@ -12,18 +12,31 @@ PLACES: list[tuple[str, list[str]]] = [
     ("Soledad", ["soledad"]),
     ("Centro", ["el centro", "centro"]),
     ("Prado", ["el prado", "prado"]),
-    ("Uninorte", ["uninorte", "universidad del norte"]),
+    ("Uninorte", ["universidad del norte", "uninorte", "la universidad", "universidad"]),
     ("Miramar", ["miramar"]),
+    ("Playa", ["la playa", "playa", "puerto colombia"]),
 ]
 
-RESTRICTION_PREFIXES = [
+AVOID_PREFIXES = [
     "sin pasar por",
     "no pasar por",
     "sin pasar",
     "evitando",
     "evitar",
-    "sin",
 ]
+
+VIA_PREFIXES = [
+    "que pase por",
+    "que pasen por",
+    "pasa por",
+    "pasen por",
+    "pase por",
+]
+
+STREET_RE = re.compile(
+    r"^(?:la|el|calle|carrera|cra|cll)\s+\d+\w*$",
+    re.IGNORECASE,
+)
 
 
 def _strip_accents(text: str) -> str:
@@ -58,6 +71,17 @@ def _find_places(text_norm: str) -> list[tuple[int, int, str]]:
     return chosen
 
 
+def _street_label(tail: str) -> str | None:
+    token = tail.strip()
+    token = re.split(r"\s+(?:me\s+sirve|por\s+fa|gracias)\b", token, maxsplit=1)[0].strip()
+    token = token.split()[0:3]
+    candidate = " ".join(token)
+    if STREET_RE.match(candidate):
+        return candidate
+    m = re.match(r"(?:la|el|calle|carrera|cra|cll)\s+\d+\w*", tail.strip())
+    return m.group(0) if m else None
+
+
 def extract(texto: str | None) -> dict[str, str | None]:
     if not texto or not str(texto).strip():
         return {"origen": None, "destino": None, "restriccion": None}
@@ -66,7 +90,7 @@ def extract(texto: str | None) -> dict[str, str | None]:
     restriccion = None
     norm_od = norm
 
-    for prefix in RESTRICTION_PREFIXES:
+    for prefix in AVOID_PREFIXES:
         prefix_n = _norm(prefix)
         match = re.search(rf"{re.escape(prefix_n)}\s+", norm)
         if not match:
@@ -77,6 +101,23 @@ def extract(texto: str | None) -> dict[str, str | None]:
             restriccion = places_in_tail[0][2]
             norm_od = norm[: match.start()].strip()
         break
+    else:
+        for prefix in VIA_PREFIXES:
+            prefix_n = _norm(prefix)
+            match = re.search(rf"{re.escape(prefix_n)}\s+", norm)
+            if not match:
+                continue
+            tail = norm[match.end() :]
+            places_in_tail = _find_places(tail)
+            if places_in_tail:
+                restriccion = places_in_tail[0][2]
+            else:
+                street = _street_label(tail)
+                if street:
+                    restriccion = street
+            if restriccion:
+                norm_od = norm[: match.start()].strip()
+            break
 
     places = _find_places(norm_od)
     origen = None
