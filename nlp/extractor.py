@@ -13,6 +13,7 @@ PLACES: list[tuple[str, list[str]]] = [
     ("Centro", ["el centro", "centro"]),
     ("Prado", ["el prado", "prado"]),
     ("Uninorte", ["universidad del norte", "uninorte", "la universidad", "universidad"]),
+    ("Miramar", ["miramar"]),
     ("Playa", ["la playa", "playa", "puerto colombia"]),
 ]
 
