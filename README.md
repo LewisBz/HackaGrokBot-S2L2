@@ -1,51 +1,53 @@
 # HackaGrokBot-S2L2
 
-Demo de rutas de bus en Barranquilla. Este PR es la pieza de Lewis (Persona 3): extraer origen, destino y restricción de texto libre.
+Módulo NLP de una app de rutas de bus en Barranquilla.
 
-## NLP (Lewis)
+El backend manda un mensaje en lenguaje natural. Este servicio extrae origen, destino y restricciones.
 
-Entrada: texto libre en español.
-Salida, siempre este JSON:
+## Contrato
+
+`POST /extract`
 
 ```json
-{"origen":"Centro","destino":"Soledad","restriccion":null}
+{ "mensaje": "Estoy saliendo de la universidad y necesito llegar al centro, el bus que pasa por la 51 me sirve?" }
 ```
 
-Campo que no aparezca → `null`.
+Con info suficiente:
 
-### Usar la función
-
-```python
-from nlp.extractor import extract
-
-extract("quiero ir del centro a soledad")
-# {"origen": "Centro", "destino": "Soledad", "restriccion": None}
+```json
+{ "origen": "universidad", "destino": "centro", "restriccion": "que pase por la 51" }
 ```
 
-### Endpoint para Peñata
+Sin info suficiente:
+
+```json
+{ "origen": null, "destino": null, "restriccion": null, "falta_info": true }
+```
+
+`restriccion` es `null` si el usuario no pide pasar por un lugar (ej. la 51).
+
+## Correr
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn nlp.server:app --reload --port 8000
+uvicorn nlp.api:app --reload --port 8000
 ```
-
-```http
-POST /extract
-Content-Type: application/json
-
-{"texto":"de la plaza de la paz al aeropuerto, sin pasar por el mercado"}
-```
-
-```json
-{"origen":"Plaza de la Paz","destino":"Aeropuerto","restriccion":"Mercado"}
-```
-
-`GET /health` → `{"ok": true}`
-
-### Tests
 
 ```bash
-python -m unittest tests.test_extractor -v
+curl -s http://localhost:8000/extract \
+  -H 'Content-Type: application/json' \
+  -d '{"mensaje":"¿Cómo llego del aeropuerto a la playa?"}'
 ```
 
-Lugares reconocidos de entrada: Centro, Soledad, Plaza de la Paz, Aeropuerto, Mercado, Boston, Riomar, Prado, Uninorte.
+Health: `GET /health`
+
+Tests: `pytest -q`
+
+## Docker
+
+```bash
+docker build -t nlp-ruteo .
+docker run -p 8000:8000 nlp-ruteo
+```
