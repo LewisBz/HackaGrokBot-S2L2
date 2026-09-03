@@ -1,68 +1,66 @@
-# HackaGrokBot-S2L2
+# HackaGrokBot-S2L2 - Rutas Barranquilla
 
-Demo hackathon: rutas de bus en Barranquilla.
+Modular monolith: chat -> NLP -> OSRM -> reportes -> mapa.
 
-**Flujo UI:** chat/mic → `POST /api/ruta` `{ "mensaje" }` → NLP extract → geocode/OSRM → reportes ETA → mapa.
+## Tree
 
-## Frontend (Samuel) — rama `Sam`
-
-```bash
-cd Frontend
-npm install
-cp .env.example .env   # opcional
-npm run dev
+```
+app/           # FastAPI orchestrator (POST /api/ruta)
+nlp/           # Lewis - extract origen/destino/restriccion
+rutas/         # Penata - geocode + OSRM
+reportes/      # Sebas - ajuste ETA por zona
+Frontend/      # Samuel - Vite UI
+tests/         # pytest
 ```
 
-Vite en `http://localhost:5173` hace **proxy** a `http://127.0.0.1:8000` (`/api`, `/extract`, `/health`).
+## Contrato POST /api/ruta
 
-### Acoplamiento backend + NLP
+Request:
 
-Contrato (orquestador en `app/main.py` del monolito):
-
-```http
-POST /api/ruta
-Content-Type: application/json
-
-{"mensaje":"quiero ir del Centro a Soledad"}
+```json
+{"mensaje": "quiero ir del Centro a Soledad"}
 ```
 
-Respuesta esperada:
+Response (Samuel):
 
 ```json
 {
-  "origen": {"nombre": "Centro", "lat": 10.96, "lng": -74.79},
-  "destino": {"nombre": "Soledad", "lat": 10.91, "lng": -74.76},
+  "origen": {"nombre": "Centro", "lat": 10.9639, "lng": -74.7964},
+  "destino": {"nombre": "Soledad", "lat": 10.918, "lng": -74.767},
   "ruta": [[10.96, -74.79], [10.91, -74.76]],
   "eta_base": 25,
   "ajuste_reportes": 5,
   "eta_final": 30,
-  "alerta": "...",
+  "alerta": "Trafico moderado en Centro (+5 min)",
   "extract": {"origen": "Centro", "destino": "Soledad", "restriccion": null}
 }
 ```
 
-- `422` si el NLP no saca origen y destino → la UI lo muestra en el chat.
-- Lugares NLP: Centro, Soledad, Plaza de la Paz, Aeropuerto, Mercado, Boston, Riomar, Prado, Uninorte.
+422 si faltan origen o destino.
 
-Backend (rama `feature/monolith-scaffold` o cuando esté en main):
 
-```bash
+## Como correr
+
+Backend:
+
+```
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-Mock sin backend: en `.env` pon `VITE_USE_MOCK=true`.
+Frontend:
 
-### Micrófono
+```
+cd Frontend
+npm install
+# set USE_MOCK=false (env / .env)
+npm run dev
+```
 
-Botón 🎤 · Web Speech API `es-CO` · llena el input · Enviar confirma.
+Health: GET http://127.0.0.1:8000/health -> {"ok": true}
 
-## Roles
+## Workflow
 
-| Módulo | Owner | Rol |
-|--------|-------|-----|
-| Frontend | Samuel | chat + mapa + mic |
-| nlp | Lewis | extract origen/destino/restricción |
-| rutas | Peñata | geocode + OSRM |
-| reportes | Sebas | ajuste ETA |
-| app | integración | `POST /api/ruta` |
+- main solo recibe cambios via Pull Requests.
+- Ramas: feature/<modulo>-<cambio> (ej. feature/rutas-osrm).
+- No commits de node_modules/ (esta en .gitignore).
