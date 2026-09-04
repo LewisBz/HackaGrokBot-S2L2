@@ -26,6 +26,14 @@ _CACHE: dict[str, dict | None] = {}
 _VIEWBOX = "-75.0,11.08,-74.70,10.85"
 _USER_AGENT = "HackaGrokBot-S2L2"
 
+# Bbox estricto: lat 10.85-11.08, lng -75.0 a -74.70
+_LAT_MIN, _LAT_MAX = 10.85, 11.08
+_LNG_MIN, _LNG_MAX = -75.0, -74.70
+
+
+def in_barranquilla(lat: float, lng: float) -> bool:
+    return _LAT_MIN <= lat <= _LAT_MAX and _LNG_MIN <= lng <= _LNG_MAX
+
 
 def _lookup_local(nombre: str) -> dict | None:
     """Busca en PLACES con match exacto o case-insensitive."""
@@ -40,7 +48,7 @@ def _lookup_local(nombre: str) -> dict | None:
 
 
 def _nominatim(nombre: str) -> dict | None:
-    """Consulta Nominatim (Colombia, vista Barranquilla)."""
+    """Consulta Nominatim (Colombia, vista Barranquilla). Rechaza fuera del bbox."""
     params = urllib.parse.urlencode(
         {
             "q": nombre,
@@ -59,10 +67,14 @@ def _nominatim(nombre: str) -> dict | None:
         if not data:
             return None
         hit = data[0]
+        lat = float(hit["lat"])
+        lng = float(hit["lon"])
+        if not in_barranquilla(lat, lng):
+            return None
         return {
             "nombre": nombre,
-            "lat": float(hit["lat"]),
-            "lng": float(hit["lon"]),
+            "lat": lat,
+            "lng": lng,
         }
     except (
         urllib.error.URLError,

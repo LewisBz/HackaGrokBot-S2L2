@@ -12,16 +12,317 @@ body,
 body {
   font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   background: #0b1220;
-  color: #111827;
+  color: #e5e7eb;
   -webkit-font-smoothing: antialiased;
 }
 
-.app {
+.site {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   height: 100dvh;
   width: 100%;
   overflow: hidden;
+}
+
+.site-main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(11, 18, 32, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #1f2937;
+}
+
+.site-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px;
+}
+
+.site-nav-brand {
+  color: #f9fafb;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.site-nav-links {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav-link {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.site-nav-link:hover {
+  color: #f3f4f6;
+  background: #1f2937;
+}
+
+.site-nav-link.is-active {
+  color: #fff;
+  background: #2563eb;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 18px 48px;
+  color: #e5e7eb;
+}
+
+.page-header h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.page-header p {
+  margin: 0 0 20px;
+  color: #9ca3af;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #e5e7eb;
+  border: 1px solid #374151;
+}
+
+.btn-ghost:hover {
+  background: #1f2937;
+}
+
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.muted {
+  color: #9ca3af;
+}
+
+.form-error {
+  color: #fbbf24;
+  margin: 0;
+  font-size: 14px;
+}
+
+.page-home .hero {
+  padding: 12px 0 28px;
+}
+
+.hero-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin: 0 0 10px;
+}
+
+.page-home h1 {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 5vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+.hero-lead {
+  margin: 0 0 22px;
+  max-width: 54ch;
+  color: #cbd5e1;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.feature-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.feature-card h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #f9fafb;
+}
+
+.feature-card p {
+  margin: 0 0 14px;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.feature-link {
+  color: #60a5fa;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.feature-link:hover {
+  text-decoration: underline;
+}
+
+.comentarios-form {
+  display: grid;
+  gap: 12px;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 22px;
+}
+
+.comentarios-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.comentarios-form input,
+.comentarios-form textarea {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  background: #1f2937;
+  color: #f9fafb;
+  font: inherit;
+}
+
+.comentarios-form input:focus,
+.comentarios-form textarea:focus {
+  outline: 2px solid #2563eb;
+  border-color: #2563eb;
+}
+
+.feed-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.feed-toolbar h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.comentarios-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.comentario-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.comentario-zona {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #60a5fa;
+  margin-bottom: 6px;
+}
+
+.comentario-texto {
+  margin: 0;
+  color: #e5e7eb;
+  line-height: 1.45;
+}
+
+.comentario-fecha {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.app {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  color: #111827;
+}
+
+.route-page {
+  height: 100%;
 }
 
 .panel {
@@ -64,6 +365,13 @@ header.app-header {
   letter-spacing: -0.01em;
 }
 
+.app-header-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
 .chip {
   font-size: 11px;
   font-weight: 700;
@@ -86,6 +394,17 @@ header.app-header {
   border: 1px solid #166534;
 }
 
+.banner-error {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  background: #422006;
+  border: 1px solid #b45309;
+  border-radius: 10px;
+  color: #fde68a;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .chat-log {
   flex: 1;
   overflow-y: auto;
@@ -94,6 +413,7 @@ header.app-header {
   flex-direction: column;
   gap: 10px;
   background: #111827;
+  white-space: pre-wrap;
 }
 
 .msg {
@@ -293,6 +613,11 @@ form.chat-form button:disabled {
 }
 
 @media (max-width: 768px) {
+  .site-nav-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .app {
     flex-direction: column;
   }
@@ -302,7 +627,7 @@ form.chat-form button:disabled {
     min-width: 0;
     max-width: none;
     height: 42%;
-    min-height: 280px;
+    min-height: 260px;
     max-height: 48%;
     border-right: none;
     border-bottom: 1px solid #1f2937;
