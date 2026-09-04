@@ -1,8 +1,7 @@
 /**
  * Leyenda overlay /ruta.
- * Paleta GraphLayer 1:1: troncal fill #f97316 / stroke #ea580c (diamante) ·
- * barrio stroke #64748b / fill #94a3b8 · poi fill #2dd4bf / stroke #0d9488 ·
- * camino #2563eb · OSRM #0ea5e9
+ * Paleta GraphLayer: troncal #f97316 · barrio stroke #64748b / fill #94a3b8 ·
+ * poi stroke #0f766e / fill #14b8a6 · camino #1d4ed8 / #2563eb · OSRM #0ea5e9
  */
 export default function MapLegend() {
   return (
