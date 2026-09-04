@@ -52,7 +52,7 @@ export default function RutaPage() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [routeData, setRouteData] = useState(null)
-  const [grafo, setGrafo] = useState(null)
+  const [fullGrafo, setFullGrafo] = useState(null)
   const [grafoError, setGrafoError] = useState(null)
   const [busesOnline, setBusesOnline] = useState(null)
   const [busCount, setBusCount] = useState(0)
@@ -76,12 +76,12 @@ export default function RutaPage() {
         if (!data || !Array.isArray(data.nodos)) {
           throw new Error('Respuesta de /api/grafo inválida')
         }
-        setGrafo(data)
+        setFullGrafo(data)
         setGrafoError(null)
       })
       .catch((err) => {
         if (cancelled) return
-        setGrafo(null)
+        setFullGrafo(null)
         setGrafoError(err.message || 'Error al cargar /api/grafo')
       })
     return () => {
@@ -144,9 +144,9 @@ export default function RutaPage() {
                 Grafo offline
               </span>
             )}
-            {grafo && !grafoError && (
+            {fullGrafo && !grafoError && (
               <span className="chip chip--ok">
-                {(grafo.nodos || []).length} nodos
+                {(fullGrafo.nodos || []).length} nodos
               </span>
             )}
             {busesOnline === false && (
@@ -213,7 +213,7 @@ export default function RutaPage() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <GraphLayer grafo={grafo} camino={routeData?.grafo || null} />
+          <GraphLayer grafo={fullGrafo} camino={routeData?.grafo || null} />
           <BusLayer onStatus={onBusStatus} />
           {routeData && (
             <>
