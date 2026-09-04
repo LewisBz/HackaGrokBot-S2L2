@@ -1294,3 +1294,59 @@ form.chat-form button:disabled {
   }
 }
 
+/* —— Micrófono Whisper (chat /ruta) —— */
+.mic-btn {
+  padding: 12px 14px;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-width: 48px;
+}
+
+.mic-btn:hover:not(:disabled) {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.mic-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mic-btn--recording {
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: #fff;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+.mic-btn--recording:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #991b1b;
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+}
+
+form.chat-form .mic-btn {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+form.chat-form .mic-btn--recording {
+  background: #dc2626;
+  color: #fff;
+}
+
