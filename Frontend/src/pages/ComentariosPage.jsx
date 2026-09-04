@@ -33,19 +33,24 @@ const ZONAS_FALLBACK = [
   'Otro',
 ]
 
+const POLL_MS = 4500
+
 export default function ComentariosPage() {
   const [items, setItems] = useState([])
   const [zonas, setZonas] = useState(ZONAS_FALLBACK)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [softError, setSoftError] = useState(null)
   const [zona, setZona] = useState('Centro')
   const [texto, setTexto] = useState('')
   const [sending, setSending] = useState(false)
   const [formError, setFormError] = useState(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/comentarios')
       if (!res.ok) throw new Error(`Error ${res.status} al cargar comentarios`)
@@ -55,16 +60,28 @@ export default function ComentariosPage() {
         setZonas(data.zonas)
         setZona((z) => (data.zonas.includes(z) ? z : data.zonas[0]))
       }
+      setSoftError(null)
+      if (!silent) setError(null)
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los comentarios')
-      setItems([])
+      const msg = err.message || 'No se pudieron cargar los comentarios'
+      if (silent) {
+        // Keep last items; soft notice only (no spinner / hard flash)
+        setSoftError(msg)
+      } else {
+        setError(msg)
+        setItems([])
+      }
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    load()
+    load({ silent: false })
+    const id = setInterval(() => {
+      load({ silent: true })
+    }, POLL_MS)
+    return () => clearInterval(id)
   }, [load])
 
   async function handleSubmit(e) {
@@ -94,7 +111,7 @@ export default function ComentariosPage() {
         throw new Error(detail)
       }
       setTexto('')
-      await load()
+      await load({ silent: false })
     } catch (err) {
       setFormError(err.message || 'No se pudo publicar')
     } finally {
@@ -139,7 +156,12 @@ export default function ComentariosPage() {
 
       <div className="feed-toolbar">
         <h2>Feed</h2>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={load} disabled={loading}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => load({ silent: false })}
+          disabled={loading}
+        >
           Actualizar
         </button>
       </div>
@@ -148,6 +170,11 @@ export default function ComentariosPage() {
       {error && !loading && (
         <p className="form-error" role="alert">
           {error}
+        </p>
+      )}
+      {softError && !error && !loading && (
+        <p className="muted" role="status">
+          No se pudo actualizar ahora. Mostrando lo último cargado.
         </p>
       )}
 

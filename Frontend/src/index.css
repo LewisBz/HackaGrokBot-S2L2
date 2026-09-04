@@ -93,6 +93,90 @@ body {
   color: #fff;
 }
 
+/* —— site-nav (same look as topnav) —— */
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+  background: rgba(11, 18, 32, 0.95);
+  border-bottom: 1px solid #1f2937;
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  flex-shrink: 0;
+}
+
+.site-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.site-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #f8fafc;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.site-nav-brand:hover {
+  color: #fff;
+}
+
+.site-nav-brand strong {
+  display: block;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+}
+
+.site-nav-brand .topnav-sub,
+.site-nav-brand span:not([aria-hidden]) {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.site-nav-links {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav-link {
+  display: block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.site-nav-link:hover {
+  background: #1f2937;
+  color: #fff;
+}
+
+.site-nav-link.is-active {
+  background: #2563eb;
+  color: #fff;
+}
+
 .site-main {
   flex: 1;
   min-height: 0;
@@ -671,7 +755,9 @@ form.chat-form button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .topnav {
+  .topnav,
+  .site-nav,
+  .site-nav-inner {
     flex-direction: column;
     align-items: flex-start;
   }
