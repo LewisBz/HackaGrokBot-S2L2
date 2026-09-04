@@ -1,6 +1,8 @@
 /**
  * Leyenda overlay /ruta.
- * Paleta acordada: troncal #e11d48 · barrio #0d9488 · poi #64748b ·
+ * Paleta acordada (GraphLayer nodos):
+ * troncal stroke #ea580c · fill #f97316 (diamante) ·
+ * barrio #64748b · poi stroke #0d9488 · fill #2dd4bf ·
  * camino #2563eb · OSRM #0ea5e9
  */
 export default function MapLegend() {

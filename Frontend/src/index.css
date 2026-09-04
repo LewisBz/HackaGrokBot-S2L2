@@ -353,10 +353,7 @@ body {
   border-radius: 2px;
   box-shadow: none;
 }
-.pill-dot--barrio {
-  background: #64748b;
-  box-shadow: none;
-}
+.pill-dot--barrio { background: #64748b; }
 .pill-dot--poi {
   background: #2dd4bf;
   border: 2px solid #0d9488;
@@ -1230,10 +1227,7 @@ form.chat-form button:disabled {
   box-sizing: border-box;
 }
 
-.map-legend-swatch--barrio {
-  background: #64748b;
-  border-color: #64748b;
-}
+.map-legend-swatch--barrio { background: #64748b; border-color: #64748b; }
 
 .map-legend-swatch--poi {
   background: #2dd4bf;
