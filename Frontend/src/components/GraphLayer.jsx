@@ -132,7 +132,7 @@ const STYLE_EDGE_BASE = {
 }
 
 const STYLE_EDGE_PATH = {
-  color: '#1d4ed8',
+  color: '#2563eb',
   weight: 6,
   opacity: 1,
 }
@@ -156,17 +156,17 @@ const STYLE_BARRIO_PATH = {
 /* Teal/cyan; size between barrio (5/9) and troncal icon (12/16) */
 const STYLE_POI = {
   radius: 7,
-  color: '#0f766e',
+  color: '#0d9488',
   weight: 1.5,
-  fillColor: '#14b8a6',
+  fillColor: '#2dd4bf',
   fillOpacity: 0.9,
 }
 
 const STYLE_POI_PATH = {
   radius: 11,
-  color: '#115e59',
+  color: '#1d4ed8',
   weight: 3,
-  fillColor: '#2dd4bf',
+  fillColor: '#3b82f6',
   fillOpacity: 1,
 }
 

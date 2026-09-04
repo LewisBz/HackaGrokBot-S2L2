@@ -347,21 +347,17 @@ body {
 
 .pill-dot--troncal {
   background: #f97316;
-  border: 2px solid #ea580c;
-  box-sizing: border-box;
   transform: rotate(45deg);
   border-radius: 2px;
-  box-shadow: none;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.55);
 }
 .pill-dot--barrio {
-  background: #64748b;
-  box-shadow: none;
+  background: #94a3b8;
+  box-shadow: 0 0 0 2px #64748b;
 }
 .pill-dot--poi {
-  background: #2dd4bf;
-  border: 2px solid #0d9488;
-  box-sizing: border-box;
-  box-shadow: none;
+  background: #14b8a6;
+  box-shadow: 0 0 0 2px #0f766e;
 }
 .pill-dot--path { background: #2563eb; }
 .pill-dot--osrm { background: #0ea5e9; }
@@ -1226,19 +1222,17 @@ form.chat-form button:disabled {
   height: 11px;
   border-radius: 2px;
   transform: rotate(45deg);
-  border: 2px solid #ea580c;
-  box-sizing: border-box;
+  border-color: #ea580c;
 }
 
 .map-legend-swatch--barrio {
-  background: #64748b;
+  background: #94a3b8;
   border-color: #64748b;
 }
 
 .map-legend-swatch--poi {
-  background: #2dd4bf;
-  border: 2px solid #0d9488;
-  box-sizing: border-box;
+  background: #14b8a6;
+  border-color: #0f766e;
 }
 
 .map-legend-swatch--path {
