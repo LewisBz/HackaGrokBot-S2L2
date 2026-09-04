@@ -1,16 +1,43 @@
 import { Link } from 'react-router-dom'
 
+const cards = [
+  {
+    title: 'Grafo de Barranquilla',
+    body:
+      'POIs clave (Uninorte, Centro, Soledad, Aeropuerto…) unidos por corredores urbanos. Dijkstra elige el camino más corto en minutos.',
+    to: '/ruta',
+    cta: 'Ver el mapa',
+    icon: '🕸️',
+  },
+  {
+    title: 'Encontrar ruta',
+    body:
+      'Escribe origen y destino en lenguaje natural. Geocodificamos, anclamos al POI más cercano y trazamos la polyline OSRM sobre calles reales.',
+    to: '/ruta',
+    cta: 'Probar el chat',
+    icon: '🗺️',
+  },
+  {
+    title: 'Comentarios por zona',
+    body:
+      'Comparte alertas de tráfico o servicio (Mercado, Centro, Vía 40…). El feed ayuda a ajustar la experiencia de otros viajeros.',
+    to: '/comentarios',
+    cta: 'Leer y publicar',
+    icon: '💬',
+  },
+]
+
 export default function HomePage() {
   return (
-    <main className="page page-home">
+    <div className="home">
       <section className="hero">
-        <p className="hero-kicker">Hackathon · Barranquilla</p>
-        <h1>Navega la ciudad con un grafo real</h1>
+        <p className="eyebrow">HackaGrok · Barranquilla</p>
+        <h1>Muévete por la ciudad con un grafo real</h1>
         <p className="hero-lead">
-          Rutas Barranquilla combina un grafo de nodos y aristas de la ciudad,
-          búsqueda de caminos con Dijkstra, buses en vivo y comentarios por zona.
+          Explora el grafo de POIs y corredores, encuentra la mejor ruta con ETA
+          ajustado por reportes, y comparte comentarios por zona.
         </p>
-        <div className="hero-ctas">
+        <div className="hero-actions">
           <Link className="btn btn-primary" to="/ruta">
             Encontrar ruta
           </Link>
@@ -20,42 +47,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="feature-grid" aria-label="Funciones">
-        <article className="feature-card">
-          <h2>Grafo de la ciudad</h2>
-          <p>
-            En la vista de ruta se dibuja siempre el grafo completo (nodos y
-            aristas). Al pedir un trayecto, el camino Dijkstra se resalta sobre
-            el mismo mapa.
-          </p>
-          <Link to="/ruta" className="feature-link">
-            Ir al mapa →
-          </Link>
-        </article>
-
-        <article className="feature-card">
-          <h2>Encontrar ruta</h2>
-          <p>
-            Escribe origen y destino en lenguaje natural. El backend geocodifica,
-            calcula el camino en el grafo y traza la polyline OSRM con ETA
-            ajustado por reportes.
-          </p>
-          <Link to="/ruta" className="feature-link">
-            Probar chat de rutas →
-          </Link>
-        </article>
-
-        <article className="feature-card">
-          <h2>Comentarios por zona</h2>
-          <p>
-            Comparte cómo está el tráfico o el servicio en tu barrio. El feed
-            público ayuda a ajustar la experiencia de otros viajeros.
-          </p>
-          <Link to="/comentarios" className="feature-link">
-            Leer y publicar →
-          </Link>
-        </article>
+      <section className="card-grid" aria-label="Funciones">
+        {cards.map((c) => (
+          <article key={c.title} className="feature-card">
+            <div className="feature-icon" aria-hidden>
+              {c.icon}
+            </div>
+            <h2>{c.title}</h2>
+            <p>{c.body}</p>
+            <Link to={c.to} className="feature-link">
+              {c.cta} →
+            </Link>
+          </article>
+        ))}
       </section>
-    </main>
+    </div>
   )
 }

@@ -22,41 +22,49 @@ function normalizeList(data) {
   return []
 }
 
+const ZONAS_FALLBACK = [
+  'Centro',
+  'Prado',
+  'Vía 40',
+  'Uninorte',
+  'Soledad',
+  'Mercado',
+  'Aeropuerto',
+  'Otro',
+]
+
 export default function ComentariosPage() {
   const [items, setItems] = useState([])
+  const [zonas, setZonas] = useState(ZONAS_FALLBACK)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [zona, setZona] = useState('')
+  const [zona, setZona] = useState('Centro')
   const [texto, setTexto] = useState('')
   const [sending, setSending] = useState(false)
   const [formError, setFormError] = useState(null)
 
-  const load = useCallback(async (opts = {}) => {
-    const silent = !!opts.silent
-    if (!silent) {
-      setLoading(true)
-      setError(null)
-    }
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
     try {
       const res = await fetch('/api/comentarios')
       if (!res.ok) throw new Error(`Error ${res.status} al cargar comentarios`)
       const data = await res.json()
       setItems(normalizeList(data))
-      if (silent) setError(null)
-    } catch (err) {
-      if (!silent) {
-        setError(err.message || 'No se pudieron cargar los comentarios')
-        setItems([])
+      if (Array.isArray(data?.zonas) && data.zonas.length) {
+        setZonas(data.zonas)
+        setZona((z) => (data.zonas.includes(z) ? z : data.zonas[0]))
       }
+    } catch (err) {
+      setError(err.message || 'No se pudieron cargar los comentarios')
+      setItems([])
     } finally {
-      if (!silent) setLoading(false)
+      setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
-    const id = setInterval(() => load({ silent: true }), 3000)
-    return () => clearInterval(id)
   }, [load])
 
   async function handleSubmit(e) {
@@ -85,7 +93,6 @@ export default function ComentariosPage() {
         }
         throw new Error(detail)
       }
-      setZona('')
       setTexto('')
       await load()
     } catch (err) {
@@ -96,72 +103,70 @@ export default function ComentariosPage() {
   }
 
   return (
-    <main className="page page-comentarios">
+    <div className="comentarios-page">
       <header className="page-header">
-        <h1>Comentarios</h1>
-        <p>Comparte cómo se mueve tu zona en Barranquilla.</p>
+        <h1>Comentarios en vivo</h1>
+        <p>Comparte alertas por zona en Barranquilla. Sin mocks: todo va al API.</p>
       </header>
 
-      <form className="comentarios-form" onSubmit={handleSubmit}>
+      <form className="comentario-form" onSubmit={handleSubmit}>
         <label>
           Zona
+          <select value={zona} onChange={(e) => setZona(e.target.value)}>
+            {zonas.map((z) => (
+              <option key={z} value={z}>
+                {z}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grow">
+          Comentario
           <input
             type="text"
-            value={zona}
-            onChange={(e) => setZona(e.target.value)}
-            placeholder="Ej: Prado, Centro, Vía 40…"
-            autoComplete="off"
-            required
-          />
-        </label>
-        <label>
-          Comentario
-          <textarea
+            maxLength={500}
+            placeholder="Ej: Tráfico lento en la Calle 72…"
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="¿Tráfico, buses, demoras…?"
-            rows={3}
-            maxLength={500}
-            required
+            autoComplete="off"
           />
         </label>
-        {formError && <p className="form-error">{formError}</p>}
         <button type="submit" className="btn btn-primary" disabled={sending}>
           {sending ? 'Publicando…' : 'Publicar'}
         </button>
       </form>
+      {formError && <p className="form-error">{formError}</p>}
 
-      <section className="comentarios-feed" aria-live="polite">
-        <div className="feed-toolbar">
-          <h2>Feed</h2>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={load}>
-            Actualizar
-          </button>
-        </div>
+      <div className="feed-toolbar">
+        <h2>Feed</h2>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={load} disabled={loading}>
+          Actualizar
+        </button>
+      </div>
 
-        {loading && <p className="muted">Cargando comentarios…</p>}
-        {error && !loading && (
-          <p className="chip chip--warn" role="alert">
-            {error}
-          </p>
-        )}
+      {loading && <p className="muted">Cargando comentarios…</p>}
+      {error && !loading && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      <ul className="comentario-list">
         {!loading && !error && items.length === 0 && (
-          <p className="muted">Aún no hay comentarios. Sé el primero.</p>
+          <li className="comentario-empty">Aún no hay comentarios. Sé el primero.</li>
         )}
-        <ul className="comentarios-list">
-          {items.map((c, i) => (
-            <li key={c.id ?? `${c.zona}-${i}`} className="comentario-card">
-              <div className="comentario-zona">{c.zona || 'Sin zona'}</div>
-              <p className="comentario-texto">{c.texto || c.mensaje || ''}</p>
-              {(c.created_at || c.fecha) && (
-                <time className="comentario-fecha" dateTime={c.created_at || c.fecha}>
-                  {formatTime(c.created_at || c.fecha)}
-                </time>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </main>
+        {items.map((c, i) => (
+          <li key={c.id ?? `${c.zona}-${i}`} className="comentario-item">
+            <span className="zone-tag">{c.zona || 'Sin zona'}</span>
+            <p>{c.texto || c.mensaje || ''}</p>
+            {(c.created_at || c.fecha) && (
+              <time dateTime={c.created_at || c.fecha}>
+                {formatTime(c.created_at || c.fecha)}
+              </time>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
