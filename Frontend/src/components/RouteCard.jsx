@@ -34,15 +34,15 @@ export default function RouteCard({ routeData }) {
         boxShadow: `inset 4px 0 0 ${color.accent}`,
       }}
     >
-      <div className="route-card-title">
+      <header className="route-card-title">
         <span
           className="route-card-swatch"
           style={{ background: color.bg, borderColor: color.border }}
           aria-hidden
         />
         Bus recomendado
-      </div>
-      <div className="route-card-linea-row">
+      </header>
+      <div className="route-card-row">
         <span className="route-card-linea" style={{ color: color.accent }}>
           {bus.linea}
         </span>
@@ -50,10 +50,10 @@ export default function RouteCard({ routeData }) {
           GPS <b>{bus.id}</b>
         </span>
       </div>
-      <div className="route-card-meta">Viene de: {vieneDe}</div>
-      <div className="route-card-eta">
-        {eta != null ? `~${eta} min` : '—'}
+      <div className="route-card-meta">
+        Viene de: <b>{vieneDe}</b>
       </div>
+      <div className="route-card-eta">{eta != null ? `~${eta} min` : '—'}</div>
     </div>
   )
 }

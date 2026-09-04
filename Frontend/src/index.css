@@ -881,6 +881,11 @@ form.chat-form button:disabled {
   color: #fff;
 }
 
+.graph-path-label--poi {
+  background: rgba(13, 148, 136, 0.95);
+  color: #fff;
+}
+
 .graph-node-tooltip {
   font-weight: 600;
   font-size: 12px;
