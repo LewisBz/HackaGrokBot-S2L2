@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-
 import L from 'leaflet'
 import BusLayer from './components/BusLayer'
 import RouteCard from './components/RouteCard'
+import GraphLayer from './components/GraphLayer'
 
 // Fix Leaflet default icons under Vite
 delete L.Icon.Default.prototype._getIconUrl
@@ -198,6 +199,11 @@ export default function App() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <BusLayer onStatus={onBusStatus} />
+          <GraphLayer
+            grafo={routeData?.grafo}
+            origen={routeData?.origen}
+            destino={routeData?.destino}
+          />
           {routeData && (
             <>
               <Marker position={[routeData.origen.lat, routeData.origen.lng]}>
