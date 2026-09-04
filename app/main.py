@@ -4,13 +4,14 @@ from __future__ import annotations
 import threading
 import time
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from buses import recommend, snapshot, tick
 from comentarios import ZONAS, add_comentario, list_comentarios
-from nlp.extractor import extract
+from nlp.extractor import extract_smart as extract
+from nlp.transcribe import transcribe_bytes
 from reportes import ajustar
 from rutas import (
     fetch_route,
@@ -92,6 +93,43 @@ def post_comentario(body: ComentarioBody):
         raise HTTPException(status_code=422, detail=str(e)) from e
     return item
 
+
+
+
+@app.post("/api/transcribe")
+async def post_transcribe(
+    audio: UploadFile = File(..., description="Audio del micrófono (webm/ogg/wav/mp4)"),
+    lang: str = "es",
+):
+    """Whisper local: audio multipart field `audio` → `{texto}`."""
+    raw = await audio.read()
+    if not raw:
+        raise HTTPException(status_code=422, detail="Audio vacío")
+    name = (audio.filename or "audio.webm").lower()
+    ctype = (audio.content_type or "").lower()
+    if name.endswith(".ogg") or "ogg" in ctype:
+        suffix = ".ogg"
+    elif name.endswith(".wav") or "wav" in ctype:
+        suffix = ".wav"
+    elif name.endswith(".mp4") or name.endswith(".m4a") or "mp4" in ctype:
+        suffix = ".mp4"
+    elif name.endswith(".mp3") or "mpeg" in ctype:
+        suffix = ".mp3"
+    else:
+        suffix = ".webm"
+    try:
+        texto = transcribe_bytes(raw, language=lang or "es", suffix=suffix)
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Whisper no disponible: {e}",
+        ) from e
+    if not texto:
+        raise HTTPException(
+            status_code=422,
+            detail="No se pudo transcribir el audio (silencio o no entendible)",
+        )
+    return {"texto": texto}
 
 @app.post("/extract")
 def post_extract(body: ExtractBody):

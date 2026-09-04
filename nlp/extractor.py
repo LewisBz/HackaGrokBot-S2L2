@@ -12,7 +12,7 @@ PLACES: list[tuple[str, list[str]]] = [
     ("Soledad", ["soledad"]),
     ("Centro", ["el centro", "centro"]),
     ("Prado", ["el prado", "prado"]),
-    ("Uninorte", ["universidad del norte", "uninorte", "la universidad", "universidad"]),
+    ("Uninorte", ["universidad del norte", "uninorte", "la universidad", "universidad", "uni", "la uni"]),
     ("Playa", ["la playa", "playa", "puerto colombia"]),
     ("Buenavista", ["buenavista", "centro comercial buenavista"]),
     ("Terminal de Transportes", ["terminal", "terminal de transportes"]),
@@ -157,10 +157,23 @@ def extract(texto: str | None) -> dict[str, str | None]:
     origen = None
     destino = None
 
+    # Slang costeño
+    norm_od = re.sub(r"\bpa\b", "para", norm_od)
+    norm_od = re.sub(r"\bllevame\b|\bllévame\b", "llevame a", norm_od)
+
     if len(places) >= 2:
-        origen, destino = places[0][2], places[1][2]
+        # Si el texto dice "llegar/ir a X" antes de "salgo/desde Y", invertir
+        first, second = places[0][2], places[1][2]
+        first_pos, second_pos = places[0][0], places[1][0]
+        llegar = re.search(r"\b(llegar|llego|ir|voy)\s+(a|al)\b", norm_od)
+        salir = re.search(r"\b(salgo|saliendo|salir|desde|vengo)\s+(de|del)?\b", norm_od)
+        if llegar and salir and llegar.start() < salir.start() and first_pos < second_pos:
+            # destino aparece primero en el texto
+            origen, destino = second, first
+        else:
+            origen, destino = first, second
     elif len(places) == 1:
-        if re.search(r"\b(a|al|hacia|hasta)\b", norm_od):
+        if re.search(r"\b(a|al|hacia|hasta|pa|para)\b", norm_od):
             destino = places[0][2]
         elif re.search(r"\b(de|del|desde)\b", norm_od):
             origen = places[0][2]
@@ -191,3 +204,30 @@ def extract(texto: str | None) -> dict[str, str | None]:
                         destino = canonical
 
     return {"origen": origen, "destino": destino, "restriccion": restriccion}
+
+
+
+def extract_rules(texto: str | None) -> dict[str, str | None]:
+    """Alias público del extractor por reglas (sin IA)."""
+    return extract(texto)
+
+
+def extract_smart(texto: str | None) -> dict[str, str | None]:
+    """Gemini/xAI primero si hay API key; si no, reglas locales."""
+    base = extract(texto)
+    try:
+        from nlp.ai import extract_with_ai
+        ai = extract_with_ai(texto or "")
+    except ImportError:
+        ai = None
+    if ai and (ai.get("origen") or ai.get("destino")):
+        return {
+            "origen": ai.get("origen") or base.get("origen"),
+            "destino": ai.get("destino") or base.get("destino"),
+            "restriccion": (
+                ai.get("restriccion")
+                if ai.get("restriccion") is not None
+                else base.get("restriccion")
+            ),
+        }
+    return base
