@@ -446,12 +446,14 @@ header.app-header {
   background: #2563eb;
   color: #fff;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.35);
 }
 
 .msg.bot {
   align-self: flex-start;
-  background: #1f2937;
-  color: #f3f4f6;
+  background: #243044;
+  color: #f8fafc;
+  border: 1px solid #334155;
   border-bottom-left-radius: 4px;
 }
 
@@ -512,11 +514,11 @@ header.app-header {
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #9ca3af;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .route-card-swatch {
@@ -528,11 +530,30 @@ header.app-header {
   flex-shrink: 0;
 }
 
+.route-card-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
 .route-card-linea {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin-bottom: 4px;
+  line-height: 1.1;
+}
+
+.route-card-gps {
+  color: #9ca3af;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.route-card-gps b {
+  color: #f3f4f6;
+  font-weight: 700;
 }
 
 .route-card-meta {
@@ -548,15 +569,23 @@ header.app-header {
 .route-card-body {
   margin: 0;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.4;
   color: #9ca3af;
 }
 
 .route-card-eta {
-  margin-top: 8px;
-  font-weight: 700;
-  font-size: 16px;
-  color: #f9fafb;
+  margin-top: 10px;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  line-height: 1.1;
+}
+
+.route-card-dist {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #6b7280;
 }
 
 form.chat-form {
@@ -796,6 +825,93 @@ form.chat-form button:disabled {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+
+/* —— Graph nodes (GraphLayer) —— */
+.graph-node-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.graph-node-diamond {
+  display: block;
+  background: #ea580c;
+  border: 2px solid #9a3412;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.graph-node-diamond--path {
+  background: #f97316;
+  border-color: #7c2d12;
+  border-width: 2.5px;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.graph-path-label-wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.graph-path-label {
+  display: inline-block;
+  max-width: 140px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+}
+
+.graph-path-label--barrio {
+  background: rgba(37, 99, 235, 0.92);
+  color: #fff;
+}
+
+.graph-path-label--troncal {
+  background: rgba(234, 88, 12, 0.95);
+  color: #fff;
+}
+
+.graph-node-tooltip {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.graph-node-tooltip-kind {
+  font-weight: 500;
+  color: #64748b;
+}
+
+.graph-node-popup {
+  min-width: 120px;
+}
+
+.graph-node-popup-kind {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.leaflet-tooltip.leaflet-tooltip-top {
+  background: #0f172a;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 5px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.leaflet-tooltip-top:before {
+  border-top-color: #0f172a !important;
 }
 
 /* Compat pages */

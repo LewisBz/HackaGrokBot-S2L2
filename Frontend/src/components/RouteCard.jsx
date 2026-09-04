@@ -11,12 +11,11 @@ export default function RouteCard({ routeData }) {
       <div className="route-card route-card--empty" role="status">
         <div className="route-card-title">Sin bus recomendado</div>
         <p className="route-card-body">
-          No hay un bus cercano en flota para esta ruta (backend sin GPS /
-          flota offline, o ningún vehículo a distancia útil). La ruta en el
-          mapa y el ETA general siguen disponibles.
+          Ningún bus cercano en flota. La ruta y el ETA del mapa siguen
+          disponibles.
         </p>
         {etaFallback != null && (
-          <div className="route-card-eta">ETA ruta: ~{etaFallback} min</div>
+          <div className="route-card-eta">~{etaFallback} min</div>
         )}
       </div>
     )
@@ -25,6 +24,7 @@ export default function RouteCard({ routeData }) {
   const color = lineaColor(bus.linea)
   const eta =
     bus.eta_min != null && bus.eta_min !== '' ? bus.eta_min : etaFallback
+  const vieneDe = bus.viene_de || bus.origen_linea || '—'
 
   return (
     <div
@@ -42,26 +42,17 @@ export default function RouteCard({ routeData }) {
         />
         Bus recomendado
       </div>
-      <div className="route-card-linea" style={{ color: color.accent }}>
-        {bus.linea}
+      <div className="route-card-linea-row">
+        <span className="route-card-linea" style={{ color: color.accent }}>
+          {bus.linea}
+        </span>
+        <span className="route-card-gps">
+          GPS <b>{bus.id}</b>
+        </span>
       </div>
-      <div className="route-card-meta">
-        GPS <b>{bus.id}</b>
-      </div>
-      <div className="route-card-meta">
-        Viene de: {bus.viene_de || bus.origen_linea || '—'}
-        {(bus.hacia || bus.destino_linea)
-          ? ` → ${bus.hacia || bus.destino_linea}`
-          : ''}
-      </div>
-      {bus.next_stop ? (
-        <div className="route-card-meta">Próxima: {bus.next_stop}</div>
-      ) : null}
-      {bus.dist_km != null && (
-        <div className="route-card-meta">Distancia: {bus.dist_km} km</div>
-      )}
+      <div className="route-card-meta">Viene de: {vieneDe}</div>
       <div className="route-card-eta">
-        ETA: ~{eta != null ? `${eta} min` : '—'}
+        {eta != null ? `~${eta} min` : '—'}
       </div>
     </div>
   )

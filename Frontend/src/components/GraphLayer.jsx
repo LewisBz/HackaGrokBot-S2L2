@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { CircleMarker, Polyline, Popup } from 'react-leaflet'
+import { CircleMarker, Polyline, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { useState } from 'react'
 
 function nodeKey(n) {
   if (!n || typeof n !== 'object') return null
@@ -25,7 +26,7 @@ function buildLookup(nodos) {
     const lat = Number(n.lat)
     const lng = Number(n.lng)
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
-    byKey.set(k, { ...n, _key: k, lat, lng })
+    byKey.set(k, { ...n, _key: k, lat, lng, tipo: n.tipo || 'poi' })
   }
   return byKey
 }
@@ -61,40 +62,63 @@ function pathEdgeSet(camino) {
   return edges
 }
 
-const STYLE_EDGE_BASE = {
-  color: '#94a3b8',
-  weight: 2,
-  opacity: 0.55,
+const TIPO_STYLE = {
+  troncal: {
+    color: '#0f766e',
+    fillColor: '#14b8a6',
+    edge: '#14b8a6',
+    radius: 4.5,
+  },
+  barrio: {
+    color: '#b45309',
+    fillColor: '#f59e0b',
+    edge: '#94a3b8',
+    radius: 4,
+  },
+  poi: {
+    color: '#334155',
+    fillColor: '#94a3b8',
+    edge: '#64748b',
+    radius: 4,
+  },
 }
 
 const STYLE_EDGE_PATH = {
-  color: '#2563eb',
-  weight: 5,
+  color: '#38bdf8',
+  weight: 4,
   opacity: 0.95,
 }
 
-const STYLE_NODE_BASE = {
-  radius: 5,
-  color: '#64748b',
-  weight: 1,
-  fillColor: '#cbd5e1',
-  fillOpacity: 0.7,
+const STYLE_NODE_PATH = {
+  radius: 7,
+  color: '#0284c7',
+  weight: 2,
+  fillColor: '#38bdf8',
+  fillOpacity: 0.95,
 }
 
-const STYLE_NODE_PATH = {
-  radius: 8,
-  color: '#1d4ed8',
-  weight: 2,
-  fillColor: '#2563eb',
-  fillOpacity: 0.95,
+function shortLabel(name) {
+  if (!name) return ''
+  if (name.length <= 14) return name
+  return `${name.slice(0, 12)}…`
+}
+
+function ZoomTracker({ onZoom }) {
+  const map = useMap()
+  useMapEvents({
+    zoomend: () => onZoom(map.getZoom()),
+  })
+  return null
 }
 
 /**
  * Dibuja el grafo completo y resalta el camino Dijkstra.
- * @param {{ nodos?: any[], aristas?: any[] } | null} grafo — grafo completo (GET /api/grafo)
- * @param {{ nodos?: any[], aristas?: any[] } | null} camino — subgrafo del camino (response.grafo)
+ * Colorea por tipo (troncal | barrio | poi); etiquetas solo al acercar.
  */
 export default function GraphLayer({ grafo, camino }) {
+  const map = useMap()
+  const [zoom, setZoom] = useState(() => map.getZoom())
+
   const model = useMemo(() => {
     if (!grafo || typeof grafo !== 'object') return null
     const nodos = Array.isArray(grafo.nodos) ? grafo.nodos : []
@@ -102,7 +126,6 @@ export default function GraphLayer({ grafo, camino }) {
     if (!nodos.length && !aristas.length) return null
 
     const byKey = buildLookup(nodos)
-    // Permitir coords del camino si faltan en el grafo base
     if (camino?.nodos) {
       for (const n of camino.nodos) {
         const k = nodeKey(n)
@@ -110,7 +133,7 @@ export default function GraphLayer({ grafo, camino }) {
         const lat = Number(n.lat)
         const lng = Number(n.lng)
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
-        byKey.set(k, { ...n, _key: k, lat, lng })
+        byKey.set(k, { ...n, _key: k, lat, lng, tipo: n.tipo || 'poi' })
       }
     }
 
@@ -126,6 +149,10 @@ export default function GraphLayer({ grafo, camino }) {
       const nb = b && byKey.get(b)
       if (!na || !nb) continue
       const onPath = hasPath && highlightEdges.has(`${a}|${b}`)
+      const bothTroncal = na.tipo === 'troncal' && nb.tipo === 'troncal'
+      const edgeColor = bothTroncal
+        ? TIPO_STYLE.troncal.edge
+        : TIPO_STYLE[na.tipo]?.edge || TIPO_STYLE.poi.edge
       edges.push({
         key: `e-${a}-${b}-${i}`,
         positions: [
@@ -133,10 +160,11 @@ export default function GraphLayer({ grafo, camino }) {
           [nb.lat, nb.lng],
         ],
         onPath,
+        edgeColor,
+        weight: bothTroncal ? 2 : 1.25,
       })
     }
 
-    // Aristas del camino que no estén en el grafo base
     if (camino?.aristas) {
       for (let i = 0; i < camino.aristas.length; i++) {
         const e = camino.aristas[i]
@@ -167,12 +195,13 @@ export default function GraphLayer({ grafo, camino }) {
               [nb.lat, nb.lng],
             ],
             onPath: true,
+            edgeColor: STYLE_EDGE_PATH.color,
+            weight: STYLE_EDGE_PATH.weight,
           })
         }
       }
     }
 
-    // Base edges first, then path on top (render order)
     edges.sort((a, b) => Number(a.onPath) - Number(b.onPath))
 
     const nodes = [...byKey.values()].map((n) => ({
@@ -185,27 +214,67 @@ export default function GraphLayer({ grafo, camino }) {
 
   if (!model) return null
 
+  const showLabels = zoom >= 14
+  const showMajorLabels = zoom >= 13
+
   return (
     <>
+      <ZoomTracker onZoom={setZoom} />
       {model.edges.map((e) => (
         <Polyline
           key={e.key}
           positions={e.positions}
-          pathOptions={e.onPath ? STYLE_EDGE_PATH : STYLE_EDGE_BASE}
+          pathOptions={
+            e.onPath
+              ? STYLE_EDGE_PATH
+              : {
+                  color: e.edgeColor,
+                  weight: e.weight,
+                  opacity: 0.55,
+                }
+          }
         />
       ))}
-      {model.nodes.map((n) => (
-        <CircleMarker
-          key={`n-${n._key}`}
-          center={[n.lat, n.lng]}
-          pathOptions={n.onPath ? STYLE_NODE_PATH : STYLE_NODE_BASE}
-          radius={n.onPath ? STYLE_NODE_PATH.radius : STYLE_NODE_BASE.radius}
-        >
-          <Popup>
-            <strong>{n.nombre || n.id || n._key}</strong>
-          </Popup>
-        </CircleMarker>
-      ))}
+      {model.nodes.map((n) => {
+        const tipo = TIPO_STYLE[n.tipo] || TIPO_STYLE.poi
+        const isMajor = n.tipo === 'troncal' || n.onPath
+        const labelOk =
+          n.onPath || (showLabels && isMajor) || (showMajorLabels && isMajor) || showLabels
+        return (
+          <CircleMarker
+            key={`n-${n._key}`}
+            center={[n.lat, n.lng]}
+            pathOptions={
+              n.onPath
+                ? STYLE_NODE_PATH
+                : {
+                    color: tipo.color,
+                    weight: 1,
+                    fillColor: tipo.fillColor,
+                    fillOpacity: 0.85,
+                  }
+            }
+            radius={n.onPath ? STYLE_NODE_PATH.radius : tipo.radius}
+          >
+            {labelOk && (
+              <Tooltip
+                permanent={n.onPath || (showLabels && isMajor)}
+                direction="top"
+                offset={[0, -6]}
+                className="graph-node-label"
+                opacity={0.9}
+              >
+                {shortLabel(n.nombre || n.id || n._key)}
+              </Tooltip>
+            )}
+            <Popup>
+              <strong>{n.nombre || n.id || n._key}</strong>
+              <br />
+              <span className="popup-tipo">{n.tipo || 'poi'}</span>
+            </Popup>
+          </CircleMarker>
+        )
+      })}
     </>
   )
 }
