@@ -208,15 +208,15 @@ body {
   margin: 0 0 28px;
   border-radius: 24px;
   background:
-    radial-gradient(1100px 400px at 10% -30%, rgba(225, 29, 72, 0.18), transparent 55%),
-    radial-gradient(900px 360px at 95% 0%, rgba(13, 148, 136, 0.16), transparent 50%),
+    radial-gradient(1100px 400px at 10% -30%, rgba(249, 115, 22, 0.18), transparent 55%),
+    radial-gradient(900px 360px at 95% 0%, rgba(20, 184, 166, 0.16), transparent 50%),
     linear-gradient(165deg, #111827 0%, #0b1220 55%, #0f172a 100%);
   border: 1px solid #1e293b;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
 }
 
 .eyebrow {
-  color: #fb7185;
+  color: #fb923c;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 0.12em;
@@ -235,7 +235,7 @@ body {
 }
 
 .hero-accent {
-  background: linear-gradient(90deg, #fb7185, #0d9488);
+  background: linear-gradient(90deg, #f97316, #14b8a6);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -346,12 +346,23 @@ body {
 }
 
 .pill-dot--troncal {
-  background: #e11d48;
+  background: #f97316;
+  border: 2px solid #ea580c;
+  box-sizing: border-box;
   transform: rotate(45deg);
   border-radius: 2px;
+  box-shadow: none;
 }
-.pill-dot--barrio { background: #0d9488; }
-.pill-dot--poi { background: #64748b; }
+.pill-dot--barrio {
+  background: #94a3b8;
+  box-shadow: 0 0 0 2px #64748b;
+}
+.pill-dot--poi {
+  background: #2dd4bf;
+  border: 2px solid #0d9488;
+  box-sizing: border-box;
+  box-shadow: none;
+}
 .pill-dot--path { background: #2563eb; }
 .pill-dot--osrm { background: #0ea5e9; }
 
@@ -407,9 +418,9 @@ body {
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
 }
 
-.feature-card--troncal { border-top: 3px solid #e11d48; }
+.feature-card--troncal { border-top: 3px solid #f97316; }
 .feature-card--ruta { border-top: 3px solid #2563eb; }
-.feature-card--comentarios { border-top: 3px solid #0d9488; }
+.feature-card--comentarios { border-top: 3px solid #14b8a6; }
 
 .feature-icon {
   font-size: 30px;
@@ -1210,15 +1221,25 @@ form.chat-form button:disabled {
 }
 
 .map-legend-swatch--troncal {
-  background: #e11d48;
+  background: #f97316;
   width: 11px;
   height: 11px;
   border-radius: 2px;
   transform: rotate(45deg);
+  border: 2px solid #ea580c;
+  box-sizing: border-box;
 }
 
-.map-legend-swatch--barrio { background: #0d9488; }
-.map-legend-swatch--poi { background: #64748b; }
+.map-legend-swatch--barrio {
+  background: #94a3b8;
+  border-color: #64748b;
+}
+
+.map-legend-swatch--poi {
+  background: #2dd4bf;
+  border: 2px solid #0d9488;
+  box-sizing: border-box;
+}
 
 .map-legend-swatch--path {
   background: #2563eb;
@@ -1226,6 +1247,7 @@ form.chat-form button:disabled {
   width: 16px;
   border-radius: 999px;
   border: none;
+  box-shadow: inset 0 0 0 1px #1d4ed8;
 }
 
 .map-legend-swatch--osrm {
