@@ -88,6 +88,7 @@ export default function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [routeData, setRouteData] = useState(null)
+  const [fullGrafo, setFullGrafo] = useState(null)
   const [busesOnline, setBusesOnline] = useState(null)
   const [busCount, setBusCount] = useState(0)
   const chatLogRef = useRef(null)
@@ -95,6 +96,25 @@ export default function App() {
   const onBusStatus = useCallback(({ ok, count }) => {
     setBusesOnline(ok)
     setBusCount(count)
+  }, [])
+
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/grafo')
+        if (!res.ok) throw new Error('grafo ' + res.status)
+        const data = await res.json()
+        if (!cancelled) setFullGrafo(data)
+      } catch (err) {
+        console.warn('GET /api/grafo failed; graph layer idle', err)
+        if (!cancelled) setFullGrafo(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -198,12 +218,19 @@ export default function App() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <BusLayer onStatus={onBusStatus} />
           <GraphLayer
-            grafo={routeData?.grafo}
-            origen={routeData?.origen}
-            destino={routeData?.destino}
+            grafo={fullGrafo}
+            origen={routeData?.nodo_origen || routeData?.origen}
+            destino={routeData?.nodo_destino || routeData?.destino}
           />
+          {routeData?.grafo ? (
+            <GraphLayer
+              grafo={routeData.grafo}
+              origen={routeData?.nodo_origen || routeData?.origen}
+              destino={routeData?.nodo_destino || routeData?.destino}
+            />
+          ) : null}
+          <BusLayer onStatus={onBusStatus} />
           {routeData && (
             <>
               <Marker position={[routeData.origen.lat, routeData.origen.lng]}>

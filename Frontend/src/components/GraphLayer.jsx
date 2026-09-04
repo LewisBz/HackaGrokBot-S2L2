@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { CircleMarker, Polyline, Popup } from 'react-leaflet'
 
-/** Resolve node identity (id or nombre). */
 function nodeKey(n) {
   if (!n || typeof n !== 'object') return null
   const k = n.id ?? n.nombre
@@ -18,151 +17,106 @@ function edgeEnds(e) {
   ]
 }
 
-function normName(s) {
-  return String(s ?? '')
-    .trim()
-    .toLowerCase()
+function buildLookup(nodos) {
+  const byKey = new Map()
+  for (const n of nodos || []) {
+    const k = nodeKey(n)
+    if (!k) continue
+    const lat = Number(n.lat)
+    const lng = Number(n.lng)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
+    byKey.set(k, { ...n, _key: k, lat, lng })
+  }
+  return byKey
 }
 
-/**
- * Decide which node ids are on the highlighted path.
- * Prefer explicit camino / flags; fall back to origen/destino name match
- * or "grafo is already a path" (n-1 edges forming a chain).
- */
-function resolvePathIds(grafo, origen, destino) {
-  const nodos = Array.isArray(grafo?.nodos) ? grafo.nodos : []
-  const aristas = Array.isArray(grafo?.aristas) ? grafo.aristas : []
-  const byKey = new Map()
+function pathIdSet(camino) {
+  const ids = new Set()
+  if (!camino || typeof camino !== 'object') return ids
+  const nodos = Array.isArray(camino.nodos) ? camino.nodos : []
+  const aristas = Array.isArray(camino.aristas) ? camino.aristas : []
   for (const n of nodos) {
     const k = nodeKey(n)
-    if (k) byKey.set(k, n)
+    if (k) ids.add(k)
   }
-
-  // Explicit camino / path arrays on grafo or top-level-like fields
-  const camino =
-    grafo.camino ||
-    grafo.path ||
-    grafo.ruta_nodos ||
-    grafo.nodos_camino ||
-    null
-  if (Array.isArray(camino) && camino.length) {
-    return new Set(camino.map((x) => String(x)))
-  }
-
-  // Per-node flags
-  const flagged = nodos
-    .filter(
-      (n) =>
-        n.en_camino === true ||
-        n.on_path === true ||
-        n.highlight === true ||
-        n.en_ruta === true,
-    )
-    .map(nodeKey)
-    .filter(Boolean)
-  if (flagged.length) return new Set(flagged)
-
-  // Edges flagged as path
-  const edgePathKeys = new Set()
-  let anyEdgeFlag = false
   for (const e of aristas) {
-    if (e.en_camino || e.on_path || e.highlight || e.en_ruta) {
-      anyEdgeFlag = true
-      const [a, b] = edgeEnds(e)
-      if (a) edgePathKeys.add(a)
-      if (b) edgePathKeys.add(b)
-    }
+    const [a, b] = edgeEnds(e)
+    if (a) ids.add(a)
+    if (b) ids.add(b)
   }
-  if (anyEdgeFlag) return edgePathKeys
-
-  // Grafo looks like a single path (path_as_grafo style)
-  if (nodos.length >= 2 && aristas.length === nodos.length - 1) {
-    const deg = new Map()
-    let ok = true
-    for (const e of aristas) {
-      const [a, b] = edgeEnds(e)
-      if (!a || !b || !byKey.has(a) || !byKey.has(b)) {
-        ok = false
-        break
-      }
-      deg.set(a, (deg.get(a) || 0) + 1)
-      deg.set(b, (deg.get(b) || 0) + 1)
-    }
-    if (ok) {
-      const degrees = [...deg.values()]
-      const ends = degrees.filter((d) => d === 1).length
-      const middles = degrees.filter((d) => d === 2).length
-      if (ends === 2 && middles === Math.max(0, nodos.length - 2)) {
-        return new Set(byKey.keys())
-      }
-    }
-  }
-
-  // Match origen / destino names to nodes
-  const oName = normName(origen?.nombre ?? origen?.id ?? origen)
-  const dName = normName(destino?.nombre ?? destino?.id ?? destino)
-  const matched = new Set()
-  if (oName || dName) {
-    for (const [k, n] of byKey) {
-      const nk = normName(k)
-      const nn = normName(n.nombre)
-      if ((oName && (nk === oName || nn === oName)) || (dName && (nk === dName || nn === dName))) {
-        matched.add(k)
-      }
-    }
-  }
-  return matched
+  return ids
 }
 
-const STYLE_EDGE_SUBTLE = {
-  color: '#64748b',
+function pathEdgeSet(camino) {
+  const edges = new Set()
+  if (!camino || typeof camino !== 'object') return edges
+  const aristas = Array.isArray(camino.aristas) ? camino.aristas : []
+  for (const e of aristas) {
+    const [a, b] = edgeEnds(e)
+    if (a && b) {
+      edges.add(`${a}|${b}`)
+      edges.add(`${b}|${a}`)
+    }
+  }
+  return edges
+}
+
+const STYLE_EDGE_BASE = {
+  color: '#94a3b8',
   weight: 2,
-  opacity: 0.45,
-  dashArray: '4 6',
+  opacity: 0.55,
 }
+
 const STYLE_EDGE_PATH = {
-  color: '#c026d3',
-  weight: 4,
-  opacity: 0.9,
+  color: '#2563eb',
+  weight: 5,
+  opacity: 0.95,
 }
-const STYLE_NODE_SUBTLE = {
+
+const STYLE_NODE_BASE = {
   radius: 5,
-  color: '#475569',
+  color: '#64748b',
   weight: 1,
-  fillColor: '#94a3b8',
-  fillOpacity: 0.55,
+  fillColor: '#cbd5e1',
+  fillOpacity: 0.7,
 }
+
 const STYLE_NODE_PATH = {
-  radius: 7,
-  color: '#86198f',
+  radius: 8,
+  color: '#1d4ed8',
   weight: 2,
-  fillColor: '#e879f9',
-  fillOpacity: 0.9,
+  fillColor: '#2563eb',
+  fillOpacity: 0.95,
 }
 
 /**
- * Draws routeData.grafo on the Leaflet map.
- * If grafo is missing/null, renders nothing (no mocks).
+ * Dibuja el grafo completo y resalta el camino Dijkstra.
+ * @param {{ nodos?: any[], aristas?: any[] } | null} grafo — grafo completo (GET /api/grafo)
+ * @param {{ nodos?: any[], aristas?: any[] } | null} camino — subgrafo del camino (response.grafo)
  */
-export default function GraphLayer({ grafo, origen, destino }) {
+export default function GraphLayer({ grafo, camino }) {
   const model = useMemo(() => {
     if (!grafo || typeof grafo !== 'object') return null
     const nodos = Array.isArray(grafo.nodos) ? grafo.nodos : []
     const aristas = Array.isArray(grafo.aristas) ? grafo.aristas : []
     if (!nodos.length && !aristas.length) return null
 
-    const byKey = new Map()
-    for (const n of nodos) {
-      const k = nodeKey(n)
-      if (!k) continue
-      const lat = Number(n.lat)
-      const lng = Number(n.lng)
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
-      byKey.set(k, { ...n, _key: k, lat, lng })
+    const byKey = buildLookup(nodos)
+    // Permitir coords del camino si faltan en el grafo base
+    if (camino?.nodos) {
+      for (const n of camino.nodos) {
+        const k = nodeKey(n)
+        if (!k || byKey.has(k)) continue
+        const lat = Number(n.lat)
+        const lng = Number(n.lng)
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
+        byKey.set(k, { ...n, _key: k, lat, lng })
+      }
     }
 
-    const pathIds = resolvePathIds(grafo, origen, destino)
-    const hasPathHighlight = pathIds.size > 0
+    const highlightNodes = pathIdSet(camino)
+    const highlightEdges = pathEdgeSet(camino)
+    const hasPath = highlightNodes.size > 0 || highlightEdges.size > 0
 
     const edges = []
     for (let i = 0; i < aristas.length; i++) {
@@ -171,10 +125,7 @@ export default function GraphLayer({ grafo, origen, destino }) {
       const na = a && byKey.get(a)
       const nb = b && byKey.get(b)
       if (!na || !nb) continue
-      const onPath =
-        hasPathHighlight && pathIds.has(a) && pathIds.has(b)
-          ? true
-          : !!(e.en_camino || e.on_path || e.highlight || e.en_ruta)
+      const onPath = hasPath && highlightEdges.has(`${a}|${b}`)
       edges.push({
         key: `e-${a}-${b}-${i}`,
         positions: [
@@ -185,13 +136,52 @@ export default function GraphLayer({ grafo, origen, destino }) {
       })
     }
 
+    // Aristas del camino que no estén en el grafo base
+    if (camino?.aristas) {
+      for (let i = 0; i < camino.aristas.length; i++) {
+        const e = camino.aristas[i]
+        const [a, b] = edgeEnds(e)
+        const na = a && byKey.get(a)
+        const nb = b && byKey.get(b)
+        if (!na || !nb) continue
+        const already = edges.some(
+          (x) =>
+            (x.key.includes(`${a}-${b}`) || x.key.includes(`${b}-${a}`)) &&
+            x.onPath,
+        )
+        if (already) continue
+        const existsBase = edges.some(
+          (x) => x.key.startsWith(`e-${a}-${b}-`) || x.key.startsWith(`e-${b}-${a}-`),
+        )
+        if (existsBase) {
+          for (const x of edges) {
+            if (x.key.startsWith(`e-${a}-${b}-`) || x.key.startsWith(`e-${b}-${a}-`)) {
+              x.onPath = true
+            }
+          }
+        } else {
+          edges.push({
+            key: `e-path-${a}-${b}-${i}`,
+            positions: [
+              [na.lat, na.lng],
+              [nb.lat, nb.lng],
+            ],
+            onPath: true,
+          })
+        }
+      }
+    }
+
+    // Base edges first, then path on top (render order)
+    edges.sort((a, b) => Number(a.onPath) - Number(b.onPath))
+
     const nodes = [...byKey.values()].map((n) => ({
       ...n,
-      onPath: hasPathHighlight && pathIds.has(n._key),
+      onPath: hasPath && highlightNodes.has(n._key),
     }))
 
-    return { nodes, edges, hasPathHighlight }
-  }, [grafo, origen, destino])
+    return { nodes, edges }
+  }, [grafo, camino])
 
   if (!model) return null
 
@@ -201,28 +191,18 @@ export default function GraphLayer({ grafo, origen, destino }) {
         <Polyline
           key={e.key}
           positions={e.positions}
-          pathOptions={e.onPath ? STYLE_EDGE_PATH : STYLE_EDGE_SUBTLE}
+          pathOptions={e.onPath ? STYLE_EDGE_PATH : STYLE_EDGE_BASE}
         />
       ))}
       {model.nodes.map((n) => (
         <CircleMarker
           key={`n-${n._key}`}
           center={[n.lat, n.lng]}
-          pathOptions={n.onPath ? STYLE_NODE_PATH : STYLE_NODE_SUBTLE}
-          radius={n.onPath ? STYLE_NODE_PATH.radius : STYLE_NODE_SUBTLE.radius}
+          pathOptions={n.onPath ? STYLE_NODE_PATH : STYLE_NODE_BASE}
+          radius={n.onPath ? STYLE_NODE_PATH.radius : STYLE_NODE_BASE.radius}
         >
           <Popup>
             <strong>{n.nombre || n.id || n._key}</strong>
-            {n.nombre && n.id && n.nombre !== n.id ? (
-              <>
-                <br />
-                Id: {n.id}
-              </>
-            ) : null}
-            <br />
-            {n.onPath ? 'Nodo en la ruta del grafo' : 'Nodo del grafo'}
-            <br />
-            {n.lat.toFixed(5)}, {n.lng.toFixed(5)}
           </Popup>
         </CircleMarker>
       ))}
