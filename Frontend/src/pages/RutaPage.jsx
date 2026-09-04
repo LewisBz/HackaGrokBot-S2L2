@@ -4,6 +4,7 @@ import L from 'leaflet'
 import BusLayer from '../components/BusLayer'
 import RouteCard from '../components/RouteCard'
 import GraphLayer from '../components/GraphLayer'
+import MapLegend from '../components/MapLegend'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -204,9 +205,10 @@ export default function RutaPage() {
       </aside>
 
       <div className="map-container">
+        <MapLegend />
         <MapContainer
           center={BARRANQUILLA_CENTER}
-          zoom={13}
+          zoom={12}
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer

@@ -61,5 +61,26 @@ class TestGraph(unittest.TestCase):
         self.assertLess(km, 12)
 
 
+    def test_expanded_node_count(self):
+        self.assertGreaterEqual(len(NODES), 30)
+        tipos = {n.get("tipo") for n in NODES.values()}
+        self.assertIn("troncal", tipos)
+        self.assertIn("barrio", tipos)
+
+    def test_portal_joe_multihop(self):
+        path = dijkstra("Portal de Soledad", "Joe Arroyo")
+        self.assertIsNotNone(path)
+        self.assertGreaterEqual(len(path), 3)
+        self.assertEqual(path[0], "Portal de Soledad")
+        self.assertEqual(path[-1], "Joe Arroyo")
+
+    def test_uninorte_estadio_multihop(self):
+        path = dijkstra("Uninorte", "Estadio Metropolitano")
+        self.assertIsNotNone(path)
+        self.assertGreaterEqual(len(path), 3)
+        self.assertEqual(path[0], "Uninorte")
+        self.assertEqual(path[-1], "Estadio Metropolitano")
+
+
 if __name__ == "__main__":
     unittest.main()

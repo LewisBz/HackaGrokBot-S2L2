@@ -22,5 +22,23 @@
     "severidad": 2,
     "minutos": 6,
     "alerta": "Trafico moderado en Aeropuerto (+6 min)"
+  },
+  {
+    "zona": "Estadio Metropolitano",
+    "severidad": 2,
+    "minutos": 5,
+    "alerta": "Trafico moderado cerca del Estadio (+5 min)"
+  },
+  {
+    "zona": "Joe Arroyo",
+    "severidad": 1,
+    "minutos": 3,
+    "alerta": "Demora leve en Joe Arroyo (+3 min)"
+  },
+  {
+    "zona": "La Arenosa",
+    "severidad": 2,
+    "minutos": 4,
+    "alerta": "Congestion en La Arenosa (+4 min)"
   }
 ]

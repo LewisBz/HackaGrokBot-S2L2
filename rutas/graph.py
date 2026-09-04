@@ -1,4 +1,4 @@
-"""Grafo de POIs de Barranquilla: nodos, aristas, Dijkstra y snap."""
+"""Grafo de POIs / Transmetro Barranquilla: nodos, aristas, Dijkstra y snap."""
 from __future__ import annotations
 
 import heapq
@@ -7,29 +7,63 @@ from typing import Iterable
 
 from rutas.geocode import PLACES
 
-# Velocidad urbana media para pesos (minutos) = distancia / velocidad
 _SPEED_KMH = 25.0
 _SNAP_MAX_KM = 2.0
 
-# Corredores reales entre zonas (bidireccionales)
+# Corredores: troncales Transmetro + enlaces barrios/POI
 _CORRIDORS: list[tuple[str, str]] = [
-    ("Uninorte", "Riomar"),
-    ("Uninorte", "Boston"),
-    ("Uninorte", "Centro"),
-    ("Riomar", "Boston"),
+    ("Portal de Soledad", "Pacho Galán"),
+    ("Pacho Galán", "Pedro Ramayá"),
+    ("Pedro Ramayá", "Estadio Metropolitano"),
+    ("Estadio Metropolitano", "Joaquín Barrios Polo"),
+    ("Joaquín Barrios Polo", "Buenos Aires"),
+    ("Buenos Aires", "La Ocho"),
+    ("La Ocho", "La Catorce"),
+    ("La Catorce", "La Veintiuna"),
+    ("La Veintiuna", "Atlántico"),
+    ("Atlántico", "Chiquinquirá"),
+    ("Chiquinquirá", "La Arenosa"),
+    ("Parque Cultural del Caribe", "Barrio Abajo"),
+    ("Barrio Abajo", "La Catedral"),
+    ("La Catedral", "Alfredo Correa de Andréis"),
+    ("Alfredo Correa de Andréis", "Esthercita Forero"),
+    ("Esthercita Forero", "Joe Arroyo"),
+    ("La Arenosa", "Centro"),
+    ("La Arenosa", "Plaza de la Paz"),
+    ("Parque Cultural del Caribe", "Mercado"),
+    ("Parque Cultural del Caribe", "Centro"),
+    ("Joe Arroyo", "Prado"),
+    ("Joe Arroyo", "Boston"),
+    ("Joe Arroyo", "Esthercita Forero"),
+    ("Estadio Metropolitano", "Soledad"),
+    ("Portal de Soledad", "Terminal de Transportes"),
+    ("Portal de Soledad", "Soledad"),
+    ("Aeropuerto", "Portal de Soledad"),
+    ("Aeropuerto", "Soledad"),
+    ("Uninorte", "Villa Santos"),
+    ("Villa Santos", "Riomar"),
     ("Riomar", "Playa"),
-    ("Boston", "Prado"),
-    ("Boston", "Plaza de la Paz"),
+    ("Uninorte", "Buenavista"),
+    ("Buenavista", "Calle 84"),
+    ("Calle 84", "Calle 72"),
+    ("Calle 72", "Boston"),
+    ("Boston", "Villa Country"),
+    ("Villa Country", "Alto Prado"),
+    ("Alto Prado", "Prado"),
     ("Prado", "Plaza de la Paz"),
     ("Prado", "Centro"),
     ("Plaza de la Paz", "Centro"),
     ("Plaza de la Paz", "Mercado"),
     ("Centro", "Mercado"),
     ("Centro", "Soledad"),
-    ("Mercado", "Soledad"),
-    ("Aeropuerto", "Soledad"),
-    ("Aeropuerto", "Centro"),
-    ("Uninorte", "Prado"),
+    ("Ciudad Jardín", "Riomar"),
+    ("Ciudad Jardín", "Uninorte"),
+    ("El Recreo", "Prado"),
+    ("El Recreo", "Centro"),
+    ("Las Flores", "Uninorte"),
+    ("Las Flores", "Villa Santos"),
+    ("Uninorte", "Boston"),
+    ("Uninorte", "Centro"),
 ]
 
 
@@ -49,11 +83,16 @@ def minutes_between(a: dict, b: dict) -> float:
 
 def _node_payload(node_id: str) -> dict:
     c = PLACES[node_id]
-    return {"id": node_id, "nombre": node_id, "lat": c["lat"], "lng": c["lng"]}
+    return {
+        "id": node_id,
+        "nombre": node_id,
+        "lat": c["lat"],
+        "lng": c["lng"],
+        "tipo": c.get("tipo", "poi"),
+    }
 
 
 def build_graph() -> tuple[dict[str, dict], dict[str, list[tuple[str, float]]]]:
-    """Nodos {id -> payload} y adyacencia {id -> [(neighbor, weight_min), ...]}."""
     nodes = {name: _node_payload(name) for name in PLACES}
     adj: dict[str, list[tuple[str, float]]] = {name: [] for name in PLACES}
     seen: set[tuple[str, str]] = set()
@@ -98,7 +137,6 @@ def snap_to_node(
     lng: float,
     max_km: float = _SNAP_MAX_KM,
 ) -> dict | None:
-    """Nodo más cercano si está a <= max_km; si no, None."""
     best_id = None
     best_km = float("inf")
     for name, coords in PLACES.items():
@@ -112,7 +150,6 @@ def snap_to_node(
 
 
 def dijkstra(origen_id: str, destino_id: str) -> list[str] | None:
-    """Camino más corto (lista de ids) o None si no hay ruta."""
     if origen_id not in ADJ or destino_id not in ADJ:
         return None
     if origen_id == destino_id:
@@ -144,7 +181,7 @@ def dijkstra(origen_id: str, destino_id: str) -> list[str] | None:
         path.append(cur)
         cur = prev.get(cur)
     path.reverse()
-    if path[0] != origen_id:
+    if not path or path[0] != origen_id:
         return None
     return path
 
@@ -157,10 +194,6 @@ def path_as_grafo(path: Iterable[str]) -> dict:
 
 
 def resolve_endpoint(place: dict) -> dict | None:
-    """
-    Resuelve un geocode a un nodo del grafo.
-    Si el nombre coincide con un nodo, úsalo; si no, snap por distancia.
-    """
     nombre = (place.get("nombre") or "").strip()
     if nombre in NODES:
         return dict(NODES[nombre])

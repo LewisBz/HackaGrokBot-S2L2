@@ -47,8 +47,8 @@ def _loop_poly(forward: list[tuple[float, float]]) -> list[tuple[float, float]]:
 _LINE_DEFS: list[tuple[str, str, str, str | None]] = [
     ("A-Uninorte", "Centro", "Uninorte", "Prado"),
     ("B-Aeropuerto", "Centro", "Aeropuerto", "Soledad"),
-    ("C-Soledad", "Plaza de la Paz", "Soledad", "Mercado"),
-    ("D-Riomar", "Centro", "Riomar", "Boston"),
+    ("C-Murillo", "Portal de Soledad", "La Arenosa", "Estadio Metropolitano"),
+    ("D-Olaya", "Parque Cultural del Caribe", "Joe Arroyo", "La Catedral"),
     ("E-Playa", "Uninorte", "Playa", "Riomar"),
 ]
 
