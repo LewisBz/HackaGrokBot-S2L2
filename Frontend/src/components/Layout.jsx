@@ -9,31 +9,29 @@ const links = [
 export default function Layout() {
   return (
     <div className="site">
-      <nav className="site-nav" aria-label="Principal">
-        <div className="site-nav-inner">
-          <div className="site-nav-brand">
-            <span aria-hidden>🚏</span>
-            <div>
-              <strong>Rutas Barranquilla</strong>
-              <span className="topnav-sub">Grafo · OSRM · Comentarios</span>
-            </div>
+      <nav className="topnav" aria-label="Principal">
+        <div className="topnav-brand">
+          <span className="topnav-logo" aria-hidden>
+            🚏
+          </span>
+          <div>
+            <strong>Rutas Barranquilla</strong>
+            <span className="topnav-sub">Grafo · OSRM · Comentarios</span>
           </div>
-          <ul className="site-nav-links">
-            {links.map((l) => (
-              <li key={l.to}>
-                <NavLink
-                  to={l.to}
-                  end={l.end}
-                  className={({ isActive }) =>
-                    isActive ? 'site-nav-link is-active' : 'site-nav-link'
-                  }
-                >
-                  {l.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
         </div>
+        <ul className="topnav-links">
+          {links.map((l) => (
+            <li key={l.to}>
+              <NavLink
+                to={l.to}
+                end={l.end}
+                className={({ isActive }) => (isActive ? 'active' : undefined)}
+              >
+                {l.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
       </nav>
       <main className="site-main">
         <Outlet />
